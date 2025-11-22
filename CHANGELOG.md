@@ -4,7 +4,7 @@
 
 This document summarizes all changes made to My Campus Library (MCL) since the initial commit.
 
-## Current Version: v0.3.0
+## Current Version: v0.4.0
 
 MCL follows [Semantic Versioning](https://semver.org/) (SemVer) for version management.
 
@@ -17,6 +17,32 @@ MAJOR.MINOR.PATCH
 - **PATCH**: Bug fixes, backward compatible
 
 ## Version History
+
+### 0.4.0 - Minor Release
+
+**Release Date:** 2025-11-22  
+**Status:** Development
+
+**Features:**
+
+- Integrate Supabase authentication and database clients"
+
+**Chores:**
+
+- Run prettier in repo
+- Bump version to 0.4.0
+
+**Files Created:**
+
+- `client.ts`
+- `server.ts`
+- `middleware.ts`
+
+**Files Modified:**
+
+- `package.json`
+- `package-lock.json`
+- `CHANGELOG.md`
 
 ### 0.3.0 - Minor Release
 
