@@ -1,13 +1,15 @@
 # My Campus Library - Changelog
 
 ## Overview
+
 This document summarizes all changes made to My Campus Library (MCL) since the initial commit.
 
-## Current Version: v0.1.0
+## Current Version: v0.2.0
 
 MCL follows [Semantic Versioning](https://semver.org/) (SemVer) for version management.
 
 ## Version Format
+
 MAJOR.MINOR.PATCH
 
 - **MAJOR**: Breaking changes, major feature additions
@@ -16,13 +18,38 @@ MAJOR.MINOR.PATCH
 
 ## Version History
 
-### 0.1.0 (Current) - Minor Release
-**Release Date:** 2025-11-22  
-**Status:** Initial release  
-**Type:** Feature  
-**Version:** 0.1.0
+### 0.2.0 - Minor Release
 
-**What's new:**
+**Release Date:** 2025-11-22  
+**Status:** Development
+
+**Features:**
+- Add shadcn/ui component library 
+
+**Chores:**
+- Add `--write` to prettier script to overwrite Files
+- Run prettier in repo
+- Change status and remove type of first version
+- Update next.config for dev/prod settings
+- Bump version to 0.2.0
+
+**Files Created:**
+- `components/ui/*`
+- `lib/utils`
+- `components.json`
+
+**Files Modified:**
+- `package.json`
+- `package-lock.json`
+- `next.config.ts`
+- `CHANGELOG.md`
+
+### 0.1.0 - Minor Release
+
+**Release Date:** 2025-11-22  
+**Status:** Initial Development release  
+
+**Features:**
 - Initialize Next.js 16 with TypeScript and Tailwind CSS
 - Add Changelog.md
 - Add README.md
