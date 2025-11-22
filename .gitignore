@@ -17,6 +17,7 @@ build
 # debug
 npm-debug.log*
 
+# environmental variables
 .env*
 
 # vercel
