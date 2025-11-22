@@ -1,10 +1,10 @@
-import { createServerClient } from "@supabase/ssr"
-import { NextResponse , type NextRequest } from "next/server"
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-let supabaseRes = NextResponse.next({
-            request,
-          })
+  let supabaseRes = NextResponse.next({
+    request,
+  })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,7 +15,9 @@ let supabaseRes = NextResponse.next({
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => supabaseRes.cookies.set(name, value, options))
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseRes.cookies.set(name, value, options),
+          )
         },
       },
     },
@@ -25,10 +27,10 @@ let supabaseRes = NextResponse.next({
     data: { user },
   } = await supabase.auth.getUser()
 
- // guard against upload page for non authenticated users
-  if (!user && request.nextUrl.pathname === "/upload") {
+  // guard against upload page for non authenticated users
+  if (!user && request.nextUrl.pathname === '/upload') {
     const url = request.nextUrl.clone()
-    url.pathname = "/login"
+    url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
