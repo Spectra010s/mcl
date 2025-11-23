@@ -8,10 +8,10 @@ By submitting a Contribution (code, documentation, or other original material) t
 
 ## 1. Definitions
 
-- **"You"** means the individual or Legal Entity that owns the copyright to the Contribution.  
-- **"Contribution"** means any original work of authorship, submitted by You to the MCL Project.  
-- **"The Project"** means the MyCampusLibrary (MCL) software and its documentation.  
-- **"The Project Maintainer"** means the initial copyright holder, **Adeloye Adetayo David**, and any future Legal Entity to which the Project's copyright is assigned.  
+- **"You"** means the individual or Legal Entity that owns the copyright to the Contribution.
+- **"Contribution"** means any original work of authorship, submitted by You to the MCL Project.
+- **"The Project"** means the MyCampusLibrary (MCL) software and its documentation.
+- **"The Project Maintainer"** means the initial copyright holder, **Adeloye Adetayo David**, and any future Legal Entity to which the Project's copyright is assigned.
 
 ---
 
@@ -31,7 +31,7 @@ You hereby grant to The Project Maintainer a perpetual, worldwide, non-exclusive
 
 You represent and warrant that:
 
-- **(a) Original Work:** Your Contribution is an original work of authorship and that You are the sole owner of the copyright and all other intellectual property rights in the Contribution.  
+- **(a) Original Work:** Your Contribution is an original work of authorship and that You are the sole owner of the copyright and all other intellectual property rights in the Contribution.
 - **(b) Right to Grant:** You have the legal authority to grant the rights and licenses contained in this Agreement.
 
 ---
