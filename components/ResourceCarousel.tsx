@@ -131,6 +131,7 @@ export function ResourceCarousel({
             <Button
               size="icon"
               variant="outline"
+              aria-label="scroll left"
               className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-background border-border"
               onClick={() => scroll('left')}
             >
@@ -139,6 +140,7 @@ export function ResourceCarousel({
             <Button
               size="icon"
               variant="outline"
+              aria-label="scroll right"
               className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-background border-border"
               onClick={() => scroll('right')}
             >
