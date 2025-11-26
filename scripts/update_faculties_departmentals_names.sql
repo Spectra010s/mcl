@@ -1,0 +1,7 @@
+ALTER TABLE faculties
+RENAME COLUMN name TO short_name,
+ADD COLUMN full_name VARCHAR(255) UNIQUE NOT NULL;
+
+ALTER TABLE departments
+RENAME COLUMN name TO short_name,
+ADD COLUMN full_name VARCHAR(255) UNIQUE NOT NULL;
