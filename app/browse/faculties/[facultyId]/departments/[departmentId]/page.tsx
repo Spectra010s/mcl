@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
 interface PageProps {
-  params: { facultyId: string; departmentId: string }
+  params: Promise<{ facultyId: string; departmentId: string }>
 }
 
 // Fetch department and its academic levels
@@ -42,7 +42,8 @@ async function getDepartmentData(departmentId: string, facultyId: string) {
   return { faculty: facultyResult.data, dept: deptResult.data }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const params = await props.params
   const { departmentId, facultyId } = params
 
   const dept = await getDepartmentData(departmentId, facultyId)
@@ -58,7 +59,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function AcademicLevelsPage({ params }: PageProps) {
+export default async function AcademicLevelsPage(props: PageProps) {
+  const params = await props.params
   const { facultyId, departmentId } = params
 
   const dept = await getDepartmentData(departmentId, facultyId)

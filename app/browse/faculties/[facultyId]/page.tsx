@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ChevronLeft } from 'lucide-react'
 
 interface PageProps {
-  params: { facultyId: string }
+  params: Promise<{ facultyId: string }>
 }
 async function getDepartmentsData(facultyId: string) {
   const supabase = await createClient()
@@ -39,7 +39,8 @@ async function getDepartmentsData(facultyId: string) {
   return faculty
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const params = await props.params
   const { facultyId } = params
 
   const faculty = await getDepartmentsData(facultyId)
@@ -50,7 +51,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function DepartmentsPage({ params }: PageProps) {
+export default async function DepartmentsPage(props: PageProps) {
+  const params = await props.params
   const { facultyId } = params
 
   const faculty = await getDepartmentsData(facultyId)
