@@ -5,7 +5,14 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { BookOpen } from 'lucide-react'
 
-export default async function FacultiesPage() {
+export const metadata: Metadata = {
+    title: 'Browse Faculties - My Campus Library',
+    description: 'Explore Faculties within Fuoye',
+  }
+  
+export default async function FacultiesPage()
+{
+
   const supabase = await createClient()
 
   const { data: faculties, error } = await supabase
@@ -13,7 +20,7 @@ export default async function FacultiesPage() {
     .select(
       `
       id,
-      name,
+      short_name,
       full_name,
       description,
       departments:departments(count)
@@ -21,14 +28,9 @@ export default async function FacultiesPage() {
     )
     .order('full_name')
 
-  if (error) {
+   if (error) {
     console.error('Error fetching faculties:', error)
-  }
-
-  export const metadata: Metadata = {
-    title: 'Browse Faculties - My Campus Library',
-    description: 'Explore Faculties within Fuoye',
-  }
+   }
 
   return (
     <>

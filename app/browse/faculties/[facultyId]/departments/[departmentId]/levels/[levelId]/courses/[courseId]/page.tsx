@@ -6,7 +6,7 @@ import { ResourceCarousel } from '@/components/ResourceCarousel'
 import { ChevronLeft } from 'lucide-react'
 
 interface PageProps {
-  params: { facultyId: string; departmentId: string; levelId: string; courseId: string }
+  params: Promise<{ facultyId: string; departmentId: string; levelId: string; courseId: string }>
 }
 
 async function getCourseDetailPageData(
@@ -59,7 +59,8 @@ async function getCourseDetailPageData(
   return { dept: deptResult.data, level: levelResult.data, course: courseResult.data }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const params = await props.params;
   const { facultyId, departmentId, levelId, courseId } = params
 
   const { dept, level, course } = await getCourseDetailPageData(
@@ -78,7 +79,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function CourseDetailPage({ params }: PageProps) {
+export default async function CourseDetailPage(props: PageProps) {
+  const params = await props.params;
   const { facultyId, departmentId, levelId, courseId } = params
 
   const { dept, level, course } = await getCourseDetailPageData(
@@ -149,6 +151,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
       </div>
 
       {sortedTypes.length > 0 ? (
+      <Link href={`/resource/${resource.id}`}>
         <div className="space-y-12">
           {sortedTypes.map(type => (
             <ResourceCarousel
@@ -163,6 +166,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
             />
           ))}
         </div>
+      </Link>
       ) : (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">No resources available yet</p>

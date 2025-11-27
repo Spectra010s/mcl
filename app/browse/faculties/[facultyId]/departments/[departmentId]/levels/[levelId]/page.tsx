@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
 interface PageProps {
-  params: { facultyId: string; departmentId: string; levelId: string }
+  params: Promise<{ facultyId: string; departmentId: string; levelId: string }>
 }
 
 async function getCoursePageData(facultyId: string, departmentId: string, levelId: string) {
@@ -39,7 +39,8 @@ async function getCoursePageData(facultyId: string, departmentId: string, levelI
   return { faculty: facultyResult.data, dept: deptResult.data, level: levelResult.data }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const params = await props.params;
   const { facultyId, departmentId, levelId } = params
 
   const { dept, level } = await getCoursePageData(facultyId, departmentId, levelId)
@@ -56,7 +57,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function CoursesPage({ params }: PageProps) {
+export default async function CoursesPage(props: PageProps) {
+  const params = await props.params;
   const { facultyId, departmentId, levelId } = params
 
   const { faculty, dept, level } = await getCoursePageData(facultyId, departmentId, levelId)
