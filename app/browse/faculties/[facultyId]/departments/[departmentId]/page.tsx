@@ -43,7 +43,7 @@ async function getDepartmentData(departmentId: string, facultyId: string) {
 }
 
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
-  const params = await props.params;
+  const params = await props.params
   const { departmentId, facultyId } = params
 
   const dept = await getDepartmentData(departmentId, facultyId)
@@ -60,7 +60,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 }
 
 export default async function AcademicLevelsPage(props: PageProps) {
-  const params = await props.params;
+  const params = await props.params
   const { facultyId, departmentId } = params
 
   const dept = await getDepartmentData(departmentId, facultyId)

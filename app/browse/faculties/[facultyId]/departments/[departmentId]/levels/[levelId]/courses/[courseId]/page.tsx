@@ -60,7 +60,7 @@ async function getCourseDetailPageData(
 }
 
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
-  const params = await props.params;
+  const params = await props.params
   const { facultyId, departmentId, levelId, courseId } = params
 
   const { dept, level, course } = await getCourseDetailPageData(
@@ -80,7 +80,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 }
 
 export default async function CourseDetailPage(props: PageProps) {
-  const params = await props.params;
+  const params = await props.params
   const { facultyId, departmentId, levelId, courseId } = params
 
   const { dept, level, course } = await getCourseDetailPageData(
@@ -151,22 +151,22 @@ export default async function CourseDetailPage(props: PageProps) {
       </div>
 
       {sortedTypes.length > 0 ? (
-      <Link href={`/resource/${resource.id}`}>
-        <div className="space-y-12">
-          {sortedTypes.map(type => (
-            <ResourceCarousel
-              key={type}
-              title={getFileTypeTitle(type)}
-              fileType={type}
-              resources={groupedByType[type]}
-              facultyId={facultyId}
-              departmentId={departmentId}
-              levelId={levelId}
-              courseId={courseId}
-            />
-          ))}
-        </div>
-      </Link>
+        <Link href={`/resource/${resource.id}`}>
+          <div className="space-y-12">
+            {sortedTypes.map(type => (
+              <ResourceCarousel
+                key={type}
+                title={getFileTypeTitle(type)}
+                fileType={type}
+                resources={groupedByType[type]}
+                facultyId={facultyId}
+                departmentId={departmentId}
+                levelId={levelId}
+                courseId={courseId}
+              />
+            ))}
+          </div>
+        </Link>
       ) : (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">No resources available yet</p>

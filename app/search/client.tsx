@@ -1,19 +1,18 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { useSearchParams, useRouter} from 'next/navigation'
-import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useEffect, useState } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Heart, Download, BookmarkPlus, Search } from 'lucide-react'
-
 
 export default function SearchClient() {
   const searchParams = useSearchParams()
   const router = useRouter() // Correctly imported and used
-  const query = searchParams.get("q") || ""
+  const query = searchParams.get('q') || ''
   const [searchQuery, setSearchQuery] = useState(query)
   const [results, setResults] = useState<any[]>([])
   const [user, setUser] = useState<any>(null)
@@ -43,10 +42,12 @@ export default function SearchClient() {
         // Search across multiple fields: title, description, course_code, keywords
         // this search will be heavily worked on, mvp first
         // The query is consolidated and uses a PostgreSQL function to simplify the search and prevent duplicates in the client.
-        const { data, error } = await supabase.rpc('search_resources_and_keywords', {
-            search_term: query
-        })
-        .select(`
+        const { data, error } = await supabase
+          .rpc('search_resources_and_keywords', {
+            search_term: query,
+          })
+          .select(
+            `
             id,
             title,
             description,
@@ -68,16 +69,17 @@ export default function SearchClient() {
               )
             ),
             resource_keywords(keyword)
-          `)
-          .eq("is_approved", true)
-          .order("view_count", { ascending: false })
+          `,
+          )
+          .eq('is_approved', true)
+          .order('view_count', { ascending: false })
           .limit(50)
 
         if (error) throw error
 
         setResults(data || [])
       } catch (error) {
-        console.error("Search error:", error)
+        console.error('Search error:', error)
       } finally {
         setLoading(false)
       }
@@ -85,7 +87,7 @@ export default function SearchClient() {
 
     performSearch()
   }, [query])
-  
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
@@ -105,14 +107,12 @@ export default function SearchClient() {
               type="text"
               placeholder="Search by pdf name, filename, or course code..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="pl-12 pr-4 py-3 text-lg"
             />
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           </div>
-          <Button 
-          aria-label="Search"
-          type="submit" className="mt-4">
+          <Button aria-label="Search" type="submit" className="mt-4">
             Search
           </Button>
         </form>
@@ -126,18 +126,20 @@ export default function SearchClient() {
       ) : query ? (
         <>
           <h2 className="text-2xl font-bold text-foreground mb-6">
-            {results.length} Result{results.length !== 1 ? "s" : ""} for "{query}"
+            {results.length} Result{results.length !== 1 ? 's' : ''} for "{query}"
           </h2>
 
           <div className="space-y-4">
-            {results.map((resource) => (
+            {results.map(resource => (
               <Card key={resource.id} className="p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <Link href={`/resource/${resource.id}`} className="hover:text-primary">
                       <h3 className="font-semibold text-foreground text-lg">{resource.title}</h3>
                     </Link>
-                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{resource.description}</p>
+                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                      {resource.description}
+                    </p>
 
                     {/* Course Info */}
                     {resource.courses && (
@@ -154,11 +156,13 @@ export default function SearchClient() {
 
                     {/* Metadata */}
                     <div className="flex flex-wrap gap-4 mt-4 text-xs text-muted-foreground">
-                      <span>{resource.file_type?.toUpperCase() || "FILE"}</span>
+                      <span>{resource.file_type?.toUpperCase() || 'FILE'}</span>
                       <span>{(resource.file_size_bytes / 1024 / 1024).toFixed(2)} MB</span>
                       <span>{resource.view_count || 0} views</span>
                       <span>
-                        {resource.average_rating ? `${resource.average_rating.toFixed(1)} stars` : "No ratings"}
+                        {resource.average_rating
+                          ? `${resource.average_rating.toFixed(1)} stars`
+                          : 'No ratings'}
                       </span>
                     </div>
                   </div>
@@ -199,8 +203,7 @@ export default function SearchClient() {
         </>
       ) : (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">Enter a pdf name, make a search 
-          to get started</p>
+          <p className="text-muted-foreground">Enter a pdf name, make a search to get started</p>
         </div>
       )}
     </main>

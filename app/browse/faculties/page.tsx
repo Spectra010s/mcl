@@ -6,13 +6,11 @@ import { Button } from '@/components/ui/button'
 import { BookOpen } from 'lucide-react'
 
 export const metadata: Metadata = {
-    title: 'Browse Faculties - My Campus Library',
-    description: 'Explore Faculties within Fuoye',
-  }
-  
-export default async function FacultiesPage()
-{
+  title: 'Browse Faculties - My Campus Library',
+  description: 'Explore Faculties within Fuoye',
+}
 
+export default async function FacultiesPage() {
   const supabase = await createClient()
 
   const { data: faculties, error } = await supabase
@@ -28,9 +26,9 @@ export default async function FacultiesPage()
     )
     .order('full_name')
 
-   if (error) {
+  if (error) {
     console.error('Error fetching faculties:', error)
-   }
+  }
 
   return (
     <>

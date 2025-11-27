@@ -16,7 +16,6 @@ describe('updateSession', () => {
   beforeEach(() => {
     mockCookiesSet = vi.fn()
 
-
     mockRequest = {
       cookies: {
         getAll: vi.fn().mockReturnValue([]),
@@ -30,7 +29,6 @@ describe('updateSession', () => {
   })
 
   it('returns NextResponse if user is authenticated', async () => {
-
     const { createServerClient } = await import('@supabase/ssr')
     ;(createServerClient as any).mockReturnValueOnce({
       auth: {
