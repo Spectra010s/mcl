@@ -1,4 +1,3 @@
-'use client'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -42,9 +41,9 @@ async function getCourseDetailPageData(
         id,
         title,
         file_type,
-        downloads,
+        download_count,
         created_at,
-        visibility
+        is_approved
       )
     `,
       )
@@ -52,8 +51,7 @@ async function getCourseDetailPageData(
       .single(),
   ])
 
-  const error = deptResult.error || levelResult.data || courseResult.data
-
+  const error = deptResult.error || levelResult.error || courseResult.error
   if (error) throw error
 
   return { dept: deptResult.data, level: levelResult.data, course: courseResult.data }
@@ -90,14 +88,12 @@ export default async function CourseDetailPage(props: PageProps) {
     courseId,
   )
 
-  const approvedResources = course?.resources?.filter(r => r.visibility === 'approved') || []
+  const approvedResources = course?.resources?.filter(r => r.is_approved) || []
 
   const groupedByType: { [key: string]: typeof approvedResources } = {}
   approvedResources.forEach(resource => {
     const type = resource.file_type || 'other'
-    if (!groupedByType[type]) {
-      groupedByType[type] = []
-    }
+    if (!groupedByType[type]) groupedByType[type] = []
     groupedByType[type].push(resource)
   })
 
@@ -115,7 +111,6 @@ export default async function CourseDetailPage(props: PageProps) {
     (a, b) => fileTypeOrder.indexOf(a) - fileTypeOrder.indexOf(b),
   )
 
-  // Get file type display names
   const getFileTypeTitle = (type: string) => {
     const titles: { [key: string]: string } = {
       pdf: 'PDF Files',
@@ -132,7 +127,6 @@ export default async function CourseDetailPage(props: PageProps) {
 
   return (
     <main className="flex-1 max-w-7xl mx-auto px-4 py-12 md:px-6">
-      {/* Header */}
       <div className="mb-12">
         <Link
           href={`/browse/faculties/${facultyId}/departments/${departmentId}/levels/${levelId}`}
@@ -151,22 +145,20 @@ export default async function CourseDetailPage(props: PageProps) {
       </div>
 
       {sortedTypes.length > 0 ? (
-        <Link href={`/resource/${resource.id}`}>
-          <div className="space-y-12">
-            {sortedTypes.map(type => (
-              <ResourceCarousel
-                key={type}
-                title={getFileTypeTitle(type)}
-                fileType={type}
-                resources={groupedByType[type]}
-                facultyId={facultyId}
-                departmentId={departmentId}
-                levelId={levelId}
-                courseId={courseId}
-              />
-            ))}
-          </div>
-        </Link>
+        <div className="space-y-12">
+          {sortedTypes.map(type => (
+            <ResourceCarousel
+              key={type}
+              title={getFileTypeTitle(type)}
+              fileType={type}
+              resources={groupedByType[type]}
+              facultyId={facultyId}
+              departmentId={departmentId}
+              levelId={levelId}
+              courseId={courseId}
+            />
+          ))}
+        </div>
       ) : (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">No resources available yet</p>
