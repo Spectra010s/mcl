@@ -10,7 +10,7 @@ interface Resource {
   id: string
   title: string
   file_type: string
-  downloads: number
+  download_count: number
   created_at: string
 }
 
@@ -84,24 +84,26 @@ export function ResourceCarousel({
     <div className="mb-12">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-2xl font-bold text-foreground">{title}</h3>
-        <span className="text-sm text-muted-foreground">{resources.length} files</span>
+        <span className="text-sm text-muted-foreground">
+          {resources.length} file{resources.length !== 1 ? 's' : ''}
+        </span>
       </div>
 
       {/* Carousel Container */}
       <div className="relative group">
         <div
           ref={scrollContainerRef}
-          className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-hide"
+          className="flex gap-3 overflow-x-auto pb-4 scroll-smooth scrollbar-hide"
           style={{ scrollBehavior: 'smooth' }}
         >
           {resources.map(resource => (
             <Link
               key={resource.id}
               href={`/resource/${resource.id}`}
-              className="flex-shrink-0 w-72"
+              className="flex-shrink-0 w-52"
             >
               <Card className="h-full hover:shadow-lg hover:border-primary transition-all cursor-pointer overflow-hidden">
-                <div className="p-4 flex flex-col h-full">
+                <div className="px-3 flex flex-col h-full">
                   {/* File Icon & Type */}
                   <div className="flex items-center gap-3 mb-3">
                     {getFileIcon(resource.file_type)}
@@ -117,7 +119,9 @@ export function ResourceCarousel({
 
                   {/* Metadata */}
                   <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
-                    <span>{resource.downloads} downloads</span>
+                    <span>
+                      {resource.download_count} download{resource.download_count !== 1 ? 's' : ''}
+                    </span>
                     <span>{new Date(resource.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
