@@ -36,6 +36,10 @@ export default function SearchClient() {
       return
     }
 
+    if (query !== searchQuery) {
+      setSearchQuery(query)
+    }
+
     const performSearch = async () => {
       setLoading(true)
       try {
@@ -63,7 +67,7 @@ export default function SearchClient() {
                 level_number,
                 departments(
                   id,
-                  name,
+                  full_name,
                   faculty_id
                 )
               )
@@ -91,7 +95,6 @@ export default function SearchClient() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      // FIX: router.push must be called as a function
       router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
     }
   }
@@ -130,43 +133,45 @@ export default function SearchClient() {
           </h2>
 
           <div className="space-y-4">
-            {results.map(resource => (
-              <Card key={resource.id} className="p-6 hover:shadow-lg transition-shadow">
+            {results.map(r => (
+              <Card key={r.id} className="p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <Link href={`/resource/${resource.id}`} className="hover:text-primary">
-                      <h3 className="font-semibold text-foreground text-lg">{resource.title}</h3>
-                    </Link>
-                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                      {resource.description}
-                    </p>
+                    <Link href={`/resource/${r.id}`}>
+                      <h3 className="font-semibold text-foreground text-lg hover:text-primary">
+                        {r.title}
+                      </h3>
 
-                    {/* Course Info */}
-                    {resource.courses && (
-                      <div className="mt-3 text-sm">
-                        <span className="text-muted-foreground">
-                          {resource.courses.course_code}: {resource.courses.course_title}
-                        </span>
-                        <span className="text-muted-foreground mx-2">•</span>
-                        <span className="text-muted-foreground">
-                          Level {resource.courses.academic_levels?.level_number}
+                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                        {r.description}
+                      </p>
+
+                      {/* Course Info */}
+                      {r.courses && (
+                        <div className="mt-3 text-sm">
+                          <span className="text-muted-foreground">
+                            {r.courses.course_code}: {r.courses.course_title}
+                          </span>
+                          <span className="text-muted-foreground mx-2">•</span>
+                          <span className="text-muted-foreground">
+                            {r.courses.academic_levels?.level_number} Level
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Metadata */}
+                      <div className="flex flex-wrap gap-4 mt-4 text-xs text-muted-foreground">
+                        <span>{r.file_type?.toUpperCase() || 'FILE'}</span>
+                        <span>{(r.file_size_bytes / 1024 / 1024).toFixed(2)} MB</span>
+                        <span>{r.view_count || 0} views</span>
+                        <span>
+                          {r.average_rating ? `${r.average_rating.toFixed(1)} stars` : 'No ratings'}
                         </span>
                       </div>
-                    )}
-
-                    {/* Metadata */}
-                    <div className="flex flex-wrap gap-4 mt-4 text-xs text-muted-foreground">
-                      <span>{resource.file_type?.toUpperCase() || 'FILE'}</span>
-                      <span>{(resource.file_size_bytes / 1024 / 1024).toFixed(2)} MB</span>
-                      <span>{resource.view_count || 0} views</span>
-                      <span>
-                        {resource.average_rating
-                          ? `${resource.average_rating.toFixed(1)} stars`
-                          : 'No ratings'}
-                      </span>
-                    </div>
+                    </Link>
                   </div>
-                  <div className="flex flex-col gap-2">
+
+                  <div className="flex flex-col gap-2 items-start">
                     {user ? (
                       <>
                         <Button size="sm" variant="ghost" className="flex items-center gap-2">
