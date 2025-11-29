@@ -4,26 +4,22 @@ import { SettingsIcon } from 'lucide-react'
 import Link from 'next/link'
 import AdminStats from '@/components/AdminStats'
 
-
 export default async function AdminPage() {
-  const supabase = await createClient();
+  const supabase = await createClient()
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
 
-  const { data: profile } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-    
-  if (!user || profile.role !== "admin") {
+  if (!user || profile.role !== 'admin') {
     return (
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h1>403 Forbidden</h1>
-            <p>Access denied. Insufficient privileges.</p>
-        </div>
-    );
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h1>403 Forbidden</h1>
+        <p>Access denied. Insufficient privileges.</p>
+      </div>
+    )
   }
 
   return (
@@ -38,7 +34,7 @@ export default async function AdminPage() {
       </header>
 
       {/* Main Content */}
-     <AdminStats />
-    </div> 
+      <AdminStats />
+    </div>
   )
 }
