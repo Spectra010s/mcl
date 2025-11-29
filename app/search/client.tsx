@@ -7,11 +7,11 @@ import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Heart, Download, BookmarkPlus, Search } from 'lucide-react'
+import { Heart, Download, BookmarkPlus, Search, Eye } from 'lucide-react'
 
 export default function SearchClient() {
   const searchParams = useSearchParams()
-  const router = useRouter() // Correctly imported and used
+  const router = useRouter()
   const query = searchParams.get('q') || ''
   const [searchQuery, setSearchQuery] = useState(query)
   const [results, setResults] = useState<any[]>([])
@@ -27,7 +27,7 @@ export default function SearchClient() {
       setUser(user)
     }
     getUser()
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     if (!query) {
@@ -58,7 +58,8 @@ export default function SearchClient() {
             file_type,
             file_size_bytes,
             view_count,
-            average_rating,
+            download_count,
+            bookmark_count,
             courses(
               id,
               course_code,
@@ -163,9 +164,20 @@ export default function SearchClient() {
                       <div className="flex flex-wrap gap-4 mt-4 text-xs text-muted-foreground">
                         <span>{r.file_type?.toUpperCase() || 'FILE'}</span>
                         <span>{(r.file_size_bytes / 1024 / 1024).toFixed(2)} MB</span>
-                        <span>{r.view_count || 0} views</span>
-                        <span>
-                          {r.average_rating ? `${r.average_rating.toFixed(1)} stars` : 'No ratings'}
+
+                        <span className="flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          {r.view_count || 0} views
+                        </span>
+
+                        <span className="flex items-center gap-1">
+                          <Download className="w-3 h-3" />
+                          {r.download_count || 0} download{r.download_count !== 1 ? 's' : ''}
+                        </span>
+
+                        <span className="flex items-center gap-1">
+                          <BookmarkPlus className="w-3 h-3" />
+                          {r.bookmark_count || 0} bookmark{r.bookmark_count !== 1 ? 's' : ''}
                         </span>
                       </div>
                     </Link>
