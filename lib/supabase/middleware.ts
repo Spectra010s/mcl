@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-  let supabaseRes = NextResponse.next({
+  const supabaseRes = NextResponse.next({
     request,
   })
 
@@ -33,6 +33,26 @@ export async function updateSession(request: NextRequest) {
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
+  
+const { data: profile, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+if (user && error) {
+    return new NextResponse('Internal Server Error: Could not verify permissions.', {
+        status: 500 
+    });
+}
+
+if (request.nextUrl.pathname === '/admin') {
+  if (!user || profile.role !== "admin") {
+     return new NextResponse('Forbidden: You do not have permission to access this page.', { 
+        status: 403 
+      });
+  }
+}
 
   return supabaseRes
 }
