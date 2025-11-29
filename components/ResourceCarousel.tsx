@@ -16,23 +16,10 @@ interface Resource {
 
 interface ResourceCarouselProps {
   title: string
-  fileType: string
   resources: Resource[]
-  facultyId: string
-  departmentId: string
-  levelId: string
-  courseId: string
 }
 
-export function ResourceCarousel({
-  title,
-  fileType,
-  resources,
-  facultyId,
-  departmentId,
-  levelId,
-  courseId,
-}: ResourceCarouselProps) {
+export function ResourceCarousel({ title, resources }: ResourceCarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const getFileIcon = (type: string) => {
