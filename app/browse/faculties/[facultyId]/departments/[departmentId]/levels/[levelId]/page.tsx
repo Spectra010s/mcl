@@ -70,7 +70,9 @@ export default async function CoursesPage(props: PageProps) {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-          <span>/...</span>
+          <Link href="/browse/faculties" className="text-primary hover:underline">
+            <span>/Fa...</span>
+          </Link>
           <span>/</span>
           <Link href={`/browse/faculties/${facultyId}`} className="text-primary hover:underline">
             {faculty?.short_name}
@@ -93,7 +95,7 @@ export default async function CoursesPage(props: PageProps) {
         </p>
       </div>
       {/* Courses List */}
-      <div className="space-y-4">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {courses.map(course => (
           <Link
             key={course.id}

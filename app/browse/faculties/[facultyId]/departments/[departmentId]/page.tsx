@@ -97,14 +97,14 @@ export default async function AcademicLevelsPage(props: PageProps) {
             key={level.id}
             href={`/browse/faculties/${facultyId}/departments/${departmentId}/levels/${level.id}`}
           >
-            <Card className="h-full hover:border-primary hover:shadow-lg transition-all cursor-pointer p-6">
+            <Card className="h-full hover:border-primary hover:shadow-lg transition-all cursor-pointer p-1">
               <h3 className="font-semibold text-foreground text-lg mb-2">
                 {level.level_number} Level
               </h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground mb-1">
                 {level.courseCount} courses available
               </p>
-              <Button size="sm" variant="ghost">
+              <Button size="sm" variant="ghost" className="text-primary">
                 Browse Courses →
               </Button>
             </Card>
