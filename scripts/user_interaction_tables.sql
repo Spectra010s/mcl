@@ -10,15 +10,6 @@ CREATE TABLE IF NOT EXISTS resource_keywords (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- User Favorites
-CREATE TABLE IF NOT EXISTS user_favorites (
-  id BIGSERIAL PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  resource_id BIGINT NOT NULL REFERENCES resources(id) ON DELETE CASCADE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_id, resource_id)
-);
-
 -- User Bookmarks
 CREATE TABLE IF NOT EXISTS user_bookmarks (
   id BIGSERIAL PRIMARY KEY,
@@ -50,18 +41,6 @@ CREATE TABLE IF NOT EXISTS search_history (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   query TEXT NOT NULL,
   searched_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Resource Ratings
-CREATE TABLE IF NOT EXISTS resource_ratings (
-  id BIGSERIAL PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  resource_id BIGINT NOT NULL REFERENCES resources(id) ON DELETE CASCADE,
-  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
-  review_text TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_id, resource_id)
 );
 
 -- Admin Logs

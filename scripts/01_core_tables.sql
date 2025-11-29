@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS resources (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   view_count INTEGER DEFAULT 0,
   download_count INTEGER DEFAULT 0,
-  average_rating DECIMAL(3, 2) DEFAULT 0,
+  bookmark_count INTEGER DEFAULT 0,
   is_approved BOOLEAN DEFAULT FALSE,
   rejection_reason TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
