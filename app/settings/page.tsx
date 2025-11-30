@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LogOut, Download, BookmarkPlus, Search } from 'lucide-react'
 import { AlertCircle } from 'lucide-react'
+import { format } from 'date-fns'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -255,7 +256,7 @@ export default function SettingsPage() {
                         <div className="flex-1">
                           <h4 className="font-semibold">{download.resources?.title}</h4>
                           <p className="text-sm text-muted-foreground">
-                            Downloaded on {new Date(download.downloaded_at).toLocaleDateString()}
+                            Downloaded on {format(new Date(download.downloaded_at), 'yyyy-MM-dd')}
                           </p>
                         </div>
                         <Link href={`/resource/${download.resources?.id}`}>
@@ -298,7 +299,7 @@ export default function SettingsPage() {
                         <div className="flex-1">
                           <h4 className="font-semibold">{books.resources?.title}</h4>
                           <p className="text-sm text-muted-foreground">
-                            Added on {new Date(books.created_at).toLocaleDateString()}
+                            Added on {format(new Date(books.created_at), 'yyyy-MM-dd')}
                           </p>
                         </div>
                         <Link href={`/resource/${books.resources?.id}`}>
