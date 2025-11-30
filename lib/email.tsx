@@ -9,7 +9,7 @@ export async function sendRejectionEmail(
   rejectionReason: string,
 ) {
   try {
-    const { data, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: 'My Campus Library <onboarding@resend.dev>',
       to: userEmail,
       replyTo: 'spectra010s@gmail.com',
@@ -69,7 +69,7 @@ export async function sendApprovalEmail(
   resourceId: string,
 ) {
   try {
-    const { data, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: 'My Campus Library <onboarding@resend.dev>',
       to: userEmail,
       replyTo: 'spectra010s@gmail.com',
