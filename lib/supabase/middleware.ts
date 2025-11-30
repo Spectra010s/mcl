@@ -40,7 +40,7 @@ export async function updateSession(request: NextRequest) {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>403 – Forbidden</title>
+          <title>403 &#8212 Forbidden</title>
           <style>
             body {
               background: #fafafa;
