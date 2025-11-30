@@ -1,14 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
-import { Button } from '@/components/ui/button'
-import { SettingsIcon } from 'lucide-react'
 import Link from 'next/link'
-import AdminStats from '@/components/AdminStats'
+import AdminResource from '@/components/AdminResource'
 
-export default async function AdminPage() {
+export default async function ReviewsPage() {
   const supabase = await createClient()
 
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser()
 
   if (!user) {
@@ -24,7 +23,11 @@ export default async function AdminPage() {
     )
   }
 
-  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
+  const { data: profile, error } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
 
   if (profile.role !== 'admin') {
     return (
@@ -39,20 +42,21 @@ export default async function AdminPage() {
     )
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Admin Header */}
-      <header className="border-b border-border bg-card">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Campus Library Management</p>
-          </div>
-        </div>
-      </header>
+  const { data: pendingFiles, error: pendingError } = await supabase
+    .from('resources')
+    .select(
+      `*, 
+          courses(
+          id,
+          academic_levels(
+          level_number
+          )
+          ),
+          users:uploaded_by(email, username)`,
+    )
+    .eq('is_approved', false)
+    .or("rejection_reason.is.null,rejection_reason.eq.''")
+    .order('upload_date', { ascending: true })
 
-      {/* Main Content */}
-      <AdminStats />
-    </div>
-  )
+  return <AdminResource initialResources={pendingFiles || []} />
 }
