@@ -207,7 +207,9 @@ CREATE POLICY "Users record own downloads" ON download_history FOR INSERT WITH C
 
 -- View history: only accessible by owner
   CREATE POLICY "Users record own views" ON view_history 
-  FOR INSERT WITH CHECK (
+  FOR INSERT
+   TO authenticated
+  WITH CHECK (
    auth.uid() = user_id
   );
   
@@ -217,12 +219,10 @@ CREATE POLICY "Users view own view history" ON view_history
   );
 
 
-CREATE POLICY "Anon record views" ON view_history 
-  FOR INSERT TO anon USING (
-    auth.uid() IS NULL AND user_id IS NULL
-  ) WITH CHECK (
-    auth.uid() IS NULL AND user_id IS NULL
-  );
+CREATE POLICY "Anon record views" ON view_history
+  FOR INSERT
+  TO anon
+  WITH CHECK (auth.uid() IS NULL AND user_id IS NULL);
 
 -- Search history: only accessible by owner
 CREATE POLICY "Users view search history" ON search_history FOR SELECT USING (auth.uid() = user_id);
