@@ -4,7 +4,7 @@
 
 This document summarizes all changes made to My Campus Library (MCL) since the initial commit.
 
-## Current Version: v0.8.0
+## Current Version: v0.9.0
 
 MCL follows [Semantic Versioning](https://semver.org/) (SemVer) for version management.
 
@@ -17,6 +17,101 @@ MAJOR.MINOR.PATCH
 - **PATCH**: Bug fixes, backward compatible
 
 ## Version History
+
+### 0.9.0 - Minor Release
+
+**Release Date:** 2025-11-30
+**Status:** Development
+
+**Features:**
+
+- feat(admin): add resource review dashboard with approve/reject workflow
+- feat(admin): add styled 403 page for unauthorized access
+- feat: display upload date with date-fns to fix hydration errors
+- feat(admin-ui): Create AdminStats component for dashboard Overview
+- feat(admin): Create secure Admin Dashboard page
+- feat: add admim guard in middleware file
+- feat: add settings homepage
+- feat: add db needed for new tables, rls, functioj and triggers
+- feat: add ResourcePage for viewing detailed resource info
+- feat(sql): Create search_resources_and_keywords RPC function
+- feat(search): add SearchPage and results display
+
+**Fix:**
+
+- fix(settings): use date-fns to format download/bookmark dates
+- fix(middleware): Update 403 Forbidden response to return custom html
+- fix: correctly destructure faculty and department data, adjust level title formatting
+- fix: update course page to use new resource fields and fix error handling
+- fix: refractor ui in course page to match db
+- fix: 403 page title and email function formatting
+- fix(search): sync state with URL query and update department field
+- fix: pass user profile data in signUp options and delete manual insert logic
+- fix(db): enhance resources search and indexing
+
+**Refactor:**
+
+- Refactor view_history policies causing sql queries errors
+- refactor: add height to prevent scrollijg of age whenbchild has overflow
+- refactor: ui changes to match db , remove dependency of supabase to moutn user once
+
+**Chores:**
+
+- chore: update ResourceCarousel by removinf unused props
+- chore: update ResourceCarousel to use download_count and improve UI polish
+- chore: refractor project structure for browse pages
+- chore: run prettier in repo
+- chore: use `npx @next/codemod@canary middleware-to-proxy .` to chnage middlware → proxy.tsx
+- chore: combine mobileSearchOpen check using `? :`
+- chore: update latest migration sql to use different ALTER TABLES
+- chore: replaced — with html entity '&#8212'
+- chore: update env.example
+- chore: Bump version to 0.7.0
+- chore: update `CHANGELOG.md` for 0.9.0
+
+**Tests:**
+
+- test: add unit tests for updateSession middleware
+
+**File Created:**
+
+- `components/AdminResource.tsx`
+- `components/AdminStats`
+- `scripts/alter_resources.sql`
+- `scripts/index_performance.sql`
+- `scripts/create_functions.sql`
+- `scripts/user_interaction_tables.sql`
+- `scripts/update_faculties_departmentals_names.sql`
+- `scripts/row_level_security_policies.sql`
+- `scripts/schema.sql`
+- `lib/email.tsx`
+- `app/api/resources/[id]/approve/`
+- `app/api/resources/[id]/reject/`
+- `app/admin/page.tsx`
+- `app/admin/reviews/`
+- `app/resource[resourceId]/`
+- `app/search/`
+- `app/upload/`
+- `app/settings`
+
+**Files Modified:**
+
+- `lib/supabase/middleware.ts``
+- `app/signup/page.tsx`
+- `components/LayoutContent`
+- `components/ResourceCarousel`
+- `test/lib/middleware.ts`
+- `app/browse/faculties/[facultyId]/departments/[departmentId]/levels/[levelId]/page.tsx`
+- `app/browse/faculties/[facultyId]/departments/[departmentId]/levels/[levelId]/courses/[courseId]/page.tsx`
+- `proxy.ts`
+- `env.example`
+- `package.json`
+- `package-lock.json`
+- `CHANGELOG.md`
+
+**Files Deleted:**
+
+- `middleware.ts`
 
 ### 0.8.0 - Minor Release
 
