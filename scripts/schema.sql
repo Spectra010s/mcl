@@ -4,6 +4,9 @@
 -- CORE TABLES
 -- ===========================================
 
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+
 -- Users table (extends Supabase auth.users)
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -82,7 +85,7 @@ CREATE TABLE IF NOT EXISTS resources (
   bookmark_count INTEGER DEFAULT 0,
   is_approved BOOLEAN DEFAULT FALSE,
   rejection_reason TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  keyword_string TEXT
 );
 
 
@@ -94,7 +97,7 @@ CREATE TABLE IF NOT EXISTS resources (
 CREATE TABLE IF NOT EXISTS resource_keywords (
   id BIGSERIAL PRIMARY KEY,
   resource_id BIGINT NOT NULL REFERENCES resources(id) ON DELETE CASCADE,
-  keyword TEXT NOT NULL,
+  keyword VARCHAR(100) NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE (resource_id, keyword)
 );
@@ -169,6 +172,17 @@ CREATE POLICY "Academic levels viewable by everyone" ON academic_levels FOR SELE
 CREATE POLICY "Courses viewable by everyone" ON courses FOR SELECT USING (true);
 
 -- Resources: approved resources viewable by everyone
+CREATE POLICY "Admins can update all resources"
+ON resources
+  FOR UPDATE
+  USING (
+    EXISTS(
+      SELECT 1 FROM users
+      WHERE auth.uid() = users.id
+      AND users.role = 'admin'
+    )
+  );
+
 CREATE POLICY "Approved resources viewable by everyone" ON resources
   FOR SELECT USING (is_approved = true);
 
@@ -236,7 +250,9 @@ CREATE INDEX IF NOT EXISTS idx_download_history_user_id ON download_history(user
 CREATE INDEX IF NOT EXISTS idx_search_history_user_id ON search_history(user_id);
 
 CREATE INDEX IF NOT EXISTS resources_search_idx ON resources USING GIN (search_vector);
-
+CREATE INDEX IF NOT EXISTS idx_resources_title_trgm ON resources USING GIN (title gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_resources_keyword_string_trgm ON resources USING GIN (keyword_string gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_resources_description_trgm ON resources USING GIN (description gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_resources_upload_date ON resources(upload_date DESC);
 CREATE INDEX IF NOT EXISTS idx_resources_download_count ON resources(download_count DESC);
 CREATE INDEX IF NOT EXISTS idx_resources_bookmark_count ON resources(bookmark_count DESC);
@@ -289,14 +305,19 @@ GROUP BY
 -- Create a function to update the search_vector
 CREATE OR REPLACE FUNCTION update_search_resources_and_keywords()
 RETURNS TRIGGER AS $$
+DECLARE
+    keywords TEXT; 
 BEGIN
 
-NEW.search_vector := setweight(to_tsvector('english', NEW.title), 'A') ||
-                     setweight(to_tsvector('english', coalesce(NEW.description, '')), 'B') ||
-                     setweight(to_tsvector('english', (SELECT all_keywords FROM resources_with_keywords WHERE id = NEW.id LIMIT 1)), 'C');
+  SELECT all_keywords INTO keywords FROM resources_with_keywords WHERE id = NEW.id LIMIT 1;
 
+  NEW.keyword_string := keywords; 
+
+  NEW.search_vector := setweight(to_tsvector('english', NEW.title), 'A') ||
+                       setweight(to_tsvector('english', coalesce(NEW.description, '')), 'B') ||
+                       setweight(to_tsvector('english', coalesce(keywords, '')), 'C');
     
-    RETURN NEW;
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -305,15 +326,48 @@ CREATE TRIGGER set_search_resources_and_keywords
 BEFORE INSERT OR UPDATE ON resources
 FOR EACH ROW EXECUTE FUNCTION update_search_resources_and_keywords();
 
-CREATE OR REPLACE FUNCTION search_resources_and_keywords(search_term text)
+CREATE OR REPLACE FUNCTION update_resource_search_vector_from_keywords()
+RETURNS TRIGGER AS $$
+DECLARE
+    keywords_string TEXT;
+BEGIN
+
+    SELECT STRING_AGG(keyword, ' ') INTO keywords_string
+    FROM resource_keywords 
+    WHERE resource_id = NEW.resource_id;
+
+    UPDATE resources
+    SET 
+      keyword_string = keywords_string, 
+      search_vector = setweight(to_tsvector('english', title), 'A') ||
+                      setweight(to_tsvector('english', coalesce(description, '')), 'B') ||
+                      setweight(to_tsvector('english', coalesce(keywords_string, '')), 'C')
+    WHERE id = NEW.resource_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_keywords_update_search_vector
+AFTER INSERT OR UPDATE OR DELETE ON resource_keywords
+FOR EACH ROW EXECUTE FUNCTION update_resource_search_vector_from_keywords();
+
+CREATE OR REPLACE FUNCTION search_resources_keywords_fuzzy(search_term text)
 RETURNS SETOF resources AS $$
 SELECT r.*
 FROM resources r
-WHERE 
-    r.is_approved = TRUE 
-    AND r.search_vector @@ websearch_to_tsquery('english', search_term)
-ORDER BY 
-    ts_rank(r.search_vector, websearch_to_tsquery('english', search_term)) DESC;
+WHERE r.is_approved = TRUE
+  AND (
+       r.title % search_term
+    OR r.description % search_term
+    OR r.keyword_string % search_term 
+  )
+ORDER BY GREATEST(
+          similarity(r.title, search_term), 
+          similarity(r.description, search_term),
+          similarity(COALESCE(r.keyword_string, ''), search_term)
+       ) DESC
+LIMIT 20;
 $$ LANGUAGE SQL STABLE;
 
 -- Function to increment contribution count
