@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -11,22 +11,20 @@ import { LogOut, Download, BookmarkPlus, Search } from 'lucide-react'
 import { AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 
-
 interface SettingsComponentsProps {
   initialSearches: string[]
   initialDownloads: downloads[]
   initialBookmarks: bookmarks[]
   initialProfile: profile
-  
 }
 export default function SettingsComponents({
- initialSearches,
- initialDownloads,
- initialBookmarks, 
- initialProfile,
+  initialSearches,
+  initialDownloads,
+  initialBookmarks,
+  initialProfile,
 }: SettingsComponentsProps) {
-   const router = useRouter()
-  const p = initialProfile;
+  const router = useRouter()
+  const p = initialProfile
   const [fullName, setFullName] = useState(`${p.first_name || ''} ${p.last_name || ''}`.trim())
   const [username, setUsername] = useState(p.username || '')
   const [profileLoading, setProfileLoading] = useState(false)
@@ -34,25 +32,24 @@ export default function SettingsComponents({
   const [downloadHistory, setDownloadHistory] = useState<downloads[]>(initialDownloads)
   const [bookmarks, setBookmarks] = useState<bookmarks[]>(initialBookmarks)
   const [recentSearches, setRecentSearches] = useState<string[]>(initialSearches)
-  
+
   const [activeTab, setActiveTab] = useState('profile')
-  
-  
-useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
-    
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null
+
     if (message) {
-        timer = setTimeout(() => {
-            setMessage(null);
-        }, 3000);
+      timer = setTimeout(() => {
+        setMessage(null)
+      }, 3000)
     }
 
     return () => {
-        if (timer) {
-            clearTimeout(timer);
-        }
-    };
-}, [message])
+      if (timer) {
+        clearTimeout(timer)
+      }
+    }
+  }, [message])
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,21 +57,18 @@ useEffect(() => {
     setMessage(null)
 
     try {
-     
-     
-     const newProfile = {fullName, username}
+      const newProfile = { fullName, username }
 
       const response = await fetch(`/api/user/update`, {
         method: 'POST',
-       headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newProfile),
       })
-      
+
       const uperror = await response.json()
-      
+
       if (response.status === 400) throw new Error(uperror.error)
-     
-  
+
       setMessage({ type: 'success', text: 'Profile updated successfully' })
     } catch (error: unknown) {
       setMessage({
@@ -85,29 +79,26 @@ useEffect(() => {
       setProfileLoading(false)
     }
   }
-  
+
   const handleLogout = async () => {
-  
-  try {
-    const response = await fetch(`/api/logout`, {
-        method: 'POST'
-  })
-  
-  if (!response.ok) {
-   const error = await response.json()
-   console.error('Logout failed:', error.message);
-  }
-  } catch  (error: unknown)  {
-  
-         setMessage({
+    try {
+      const response = await fetch(`/api/logout`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        console.error('Logout failed:', error.message)
+      }
+    } catch (error: unknown) {
+      setMessage({
         type: 'error',
         text: error instanceof Error ? error.message : 'Logout failed',
       })
-      
-} finally {
-  router.refresh(); 
-}
-}
+    } finally {
+      router.refresh()
+    }
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -331,7 +322,7 @@ useEffect(() => {
                   <p className="text-sm text-muted-foreground mb-4">
                     Logging out will end your current session
                   </p>
-                   {message && (
+                  {message && (
                     <div
                       className={`p-3 rounded-lg flex gap-2 ${message.type === 'success' ? 'bg-green-50' : 'bg-red-50'}`}
                     >
