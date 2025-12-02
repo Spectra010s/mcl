@@ -284,47 +284,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-
-
--- Triggee for user creation after aith
+-- Trigger for user creation after aith
 CREATE OR REPLACE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
-CREATE OR REPLACE VIEW resources_with_keywords AS
-SELECT
-    r.*,
-    STRING_AGG(rk.keyword, ' ') AS all_keywords
-FROM
-    resources r
-LEFT JOIN
-    resource_keywords rk ON r.id = rk.resource_id
-GROUP BY
-    r.id;
-    
 -- Create a function to update the search_vector
-CREATE OR REPLACE FUNCTION update_search_resources_and_keywords()
-RETURNS TRIGGER AS $$
-DECLARE
-    keywords TEXT; 
-BEGIN
-
-  SELECT all_keywords INTO keywords FROM resources_with_keywords WHERE id = NEW.id LIMIT 1;
-
-  NEW.keyword_string := keywords; 
-
-  NEW.search_vector := setweight(to_tsvector('english', NEW.title), 'A') ||
-                       setweight(to_tsvector('english', coalesce(NEW.description, '')), 'B') ||
-                       setweight(to_tsvector('english', coalesce(keywords, '')), 'C');
-    
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE TRIGGER set_search_resources_and_keywords
-BEFORE INSERT OR UPDATE ON resources
-FOR EACH ROW EXECUTE FUNCTION update_search_resources_and_keywords();
+-- Removed unused funtion and trigger and view
 
 CREATE OR REPLACE FUNCTION update_resource_search_vector_from_keywords()
 RETURNS TRIGGER AS $$
@@ -351,6 +317,16 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_keywords_update_search_vector
 AFTER INSERT OR UPDATE OR DELETE ON resource_keywords
 FOR EACH ROW EXECUTE FUNCTION update_resource_search_vector_from_keywords();
+
+CREATE OR REPLACE FUNCTION search_resources_fts(search_term text)
+RETURNS SETOF resources AS $$
+SELECT *
+FROM resources
+WHERE is_approved = TRUE
+  AND search_vector @@ plainto_tsquery('english', search_term)
+ORDER BY ts_rank_cd(search_vector, plainto_tsquery('english', search_term)) DESC
+LIMIT 50;
+$$ LANGUAGE SQL STABLE;
 
 CREATE OR REPLACE FUNCTION search_resources_keywords_fuzzy(search_term text)
 RETURNS SETOF resources AS $$
