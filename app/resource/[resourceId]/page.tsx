@@ -14,6 +14,9 @@ export default function ResourcePage() {
   const [resource, setResource] = useState<any>(null)
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -29,6 +32,9 @@ export default function ResourcePage() {
           .select(
             `
     *,
+    user_bookmarks(
+      user_id
+    ),
     course_id(
       id,
       course_code,
@@ -52,6 +58,15 @@ export default function ResourcePage() {
 
         if (resourceError) throw resourceError
         setResource(resourceData)
+
+        const isResourceBookmarked =
+          !!user &&
+          resourceData.user_bookmarks.length > 0 &&
+          resourceData.user_bookmarks.some(
+            (bookmark: { user_id: string }) => bookmark.user_id === user.id,
+          )
+
+        setIsBookmarked(isResourceBookmarked)
 
         await supabase.from('view_history').insert({
           resource_id: resourceId,
@@ -83,6 +98,39 @@ export default function ResourcePage() {
         <p>Resource not found</p>
       </main>
     )
+  }
+
+  const handleDownload = () => {
+    setActionLoading('download')
+
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = `/api/resources/${resourceId}/download`
+    form.style.display = 'none'
+    document.body.appendChild(form)
+    form.submit()
+    document.body.removeChild(form)
+
+    setTimeout(() => setActionLoading(null), 2000)
+  }
+
+  const handleBookmark = async () => {
+    setActionLoading('bookmark')
+    try {
+      const response = await fetch(`/api/resources/${resourceId}/bookmark`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) throw new Error('Bookmark failed')
+
+      const data = await response.json()
+      setIsBookmarked(data.bookmarked)
+    } catch (error) {
+      console.error('Bookmark error:', error)
+      alert('Failed to bookmark')
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   const course = resource.course_id
@@ -170,17 +218,22 @@ export default function ResourcePage() {
         {/* Action Buttons */}
         {user ? (
           <div className="flex gap-3 mb-8">
-            <Button className="flex items-center gap-2">
+            <Button
+              onClick={handleDownload}
+              disabled={actionLoading === 'download'}
+              className="flex items-center gap-2"
+            >
               <Download className="w-4 h-4" />
-              Download
+              {actionLoading === 'download' ? 'Downloading...' : 'Download'}
             </Button>
-            <Button variant="outline" className="flex items-center gap-2 bg-transparent">
-              <Heart className="w-4 h-4" />
-              Favorite
-            </Button>
-            <Button variant="outline" className="flex items-center gap-2 bg-transparent">
-              <BookmarkPlus className="w-4 h-4" />
-              Bookmark
+            <Button
+              variant="outline"
+              className={`flex items-center gap-2 ${isBookmarked ? 'bg-blue-50 text-blue-600' : 'bg-transparent'}`}
+              onClick={handleBookmark}
+              disabled={actionLoading === 'bookmark'}
+            >
+              <BookmarkPlus className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
+              {isBookmarked ? 'Bookmarked' : 'Bookmark'}
             </Button>
           </div>
         ) : (
