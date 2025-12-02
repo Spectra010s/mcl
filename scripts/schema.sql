@@ -388,6 +388,7 @@ CREATE TRIGGER trigger_increment_contribution
 AFTER INSERT OR UPDATE ON resources
 FOR EACH ROW EXECUTE FUNCTION increment_contribution_count();
 
+
 CREATE OR REPLACE FUNCTION increment_view_count()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -403,6 +404,7 @@ BEGIN
       id != NEW.id 
     LIMIT 1;
     
+
     IF FOUND THEN
       RETURN NEW; 
     END IF;
