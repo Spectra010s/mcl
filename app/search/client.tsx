@@ -17,6 +17,9 @@ export default function SearchClient() {
   const [results, setResults] = useState<any[]>([])
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(!!query)
+  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -42,47 +45,87 @@ export default function SearchClient() {
 
     const performSearch = async () => {
       setLoading(true)
+      let finalResults = []
+
       try {
         // Search across multiple fields: title, description, course_code, keywords
         // this search will be heavily worked on, mvp first
         // The query is consolidated and uses a PostgreSQL function to simplify the search and prevent duplicates in the client.
-        const { data, error } = await supabase
-          .rpc('search_resources_and_keywords', {
-            search_term: query,
+
+        // for the search record history
+        if (user) {
+          await fetch('/api/search/record', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query }),
           })
-          .select(
-            `
-            id,
-            title,
-            description,
-            file_type,
-            file_size_bytes,
-            view_count,
-            download_count,
-            bookmark_count,
-            courses(
-              id,
-              course_code,
-              course_title,
-              academic_levels(
-                level_number,
-                departments(
-                  id,
-                  full_name,
-                  faculty_id
-                )
-              )
-            ),
-            resource_keywords(keyword)
-          `,
-          )
-          .eq('is_approved', true)
-          .order('view_count', { ascending: false })
+        }
+
+        const userId = user?.id
+
+        const ResourceQuery = `
+    id,
+    title,
+    description,
+    file_type,
+    file_size_bytes,
+    view_count,
+    download_count,
+    bookmark_count,
+    user_bookmarks(user_id),
+    courses(
+        id,
+        course_code,
+        course_title,
+        academic_levels(
+            level_number,
+            departments(
+                id,
+                full_name,
+                faculty_id
+            )
+        )
+    ),
+    resource_keywords(keyword)
+`
+
+        // --- PRIMARY SEARCH ATTEMPT: FTS ---
+
+        let { data, error } = await supabase
+          .rpc('search_resources_fts', { search_term: query })
+          .select(ResourceQuery)
           .limit(50)
 
         if (error) throw error
 
-        setResults(data || [])
+        finalResults = data || []
+        let isFuzzyFallback = false
+
+        // --- SECONDARY SEARCH ATTEMPT: Fuzzy ---
+        if (finalResults.length === 0) {
+          const fuzzyResponse = await supabase
+            .rpc('search_resources_keywords_fuzzy', { search_term: query })
+            .select(ResourceQuery)
+            .limit(50)
+
+          if (fuzzyResponse.error) throw fuzzyResponse.error
+
+          finalResults = fuzzyResponse.data || []
+          isFuzzyFallback = true
+        }
+
+        const processedResults = finalResults.map(resource => {
+          const isBookmarked =
+            !!userId && !!resource.user_bookmarks && resource.user_bookmarks.length > 0
+
+          return {
+            ...resource,
+            isBookmarked: isBookmarked,
+            user_bookmarks: undefined,
+          }
+        })
+
+        setResults(processedResults)
       } catch (error) {
         console.error('Search error:', error)
       } finally {
@@ -97,6 +140,62 @@ export default function SearchClient() {
     e.preventDefault()
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+    }
+  }
+
+  const handleDownload = (resourceId: number) => {
+    if (!user) {
+      router.push('/login?message=Login to download the file')
+      return
+    }
+
+    setActionLoading(resourceId.toString())
+
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = `/api/resources/${resourceId}/download`
+    form.style.display = 'none'
+    document.body.appendChild(form)
+    form.submit()
+    document.body.removeChild(form)
+
+    setTimeout(() => setActionLoading(null), 2000)
+  }
+
+  const handleBookmark = async (resourceId: number) => {
+    if (!user) {
+      router.push('/login?message=Login to bookmark')
+      return
+    }
+
+    setActionLoading(resourceId.toString())
+
+    try {
+      const response = await fetch(`/api/resources/${resourceId}/bookmark`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) throw new Error('Bookmark failed')
+
+      const data = await response.json()
+      const newStatus = data.bookmarked
+
+      setResults(prevResults =>
+        prevResults.map(r =>
+          r.id === resourceId
+            ? {
+                ...r,
+                isBookmarked: newStatus,
+                bookmark_count: r.bookmark_count + (newStatus ? 1 : -1),
+              }
+            : r,
+        ),
+      )
+    } catch (error) {
+      console.error('Bookmark error:', error)
+      alert('Failed to bookmark.')
+    } finally {
+      setActionLoading(null)
     }
   }
 
@@ -135,7 +234,7 @@ export default function SearchClient() {
 
           <div className="space-y-4">
             {results.map(r => (
-              <Card key={r.id} className="p-6 hover:shadow-lg transition-shadow">
+              <Card key={r.id} className="p-4 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <Link href={`/resource/${r.id}`}>
@@ -146,57 +245,38 @@ export default function SearchClient() {
                       <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                         {r.description}
                       </p>
-
-                      {/* Course Info */}
-                      {r.courses && (
-                        <div className="mt-3 text-sm">
-                          <span className="text-muted-foreground">
-                            {r.courses.course_code}: {r.courses.course_title}
-                          </span>
-                          <span className="text-muted-foreground mx-2">•</span>
-                          <span className="text-muted-foreground">
-                            {r.courses.academic_levels?.level_number} Level
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Metadata */}
-                      <div className="flex flex-wrap gap-4 mt-4 text-xs text-muted-foreground">
-                        <span>{r.file_type?.toUpperCase() || 'FILE'}</span>
-                        <span>{(r.file_size_bytes / 1024 / 1024).toFixed(2)} MB</span>
-
-                        <span className="flex items-center gap-1">
-                          <Eye className="w-3 h-3" />
-                          {r.view_count || 0} views
-                        </span>
-
-                        <span className="flex items-center gap-1">
-                          <Download className="w-3 h-3" />
-                          {r.download_count || 0} download{r.download_count !== 1 ? 's' : ''}
-                        </span>
-
-                        <span className="flex items-center gap-1">
-                          <BookmarkPlus className="w-3 h-3" />
-                          {r.bookmark_count || 0} bookmark{r.bookmark_count !== 1 ? 's' : ''}
-                        </span>
-                      </div>
                     </Link>
                   </div>
 
                   <div className="flex flex-col gap-2 items-start">
                     {user ? (
                       <>
-                        <Button size="sm" variant="ghost" className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="flex items-center gap-2"
+                          onClick={() => handleDownload(r.id)}
+                          disabled={actionLoading === r.id.toString()}
+                        >
                           <Download className="w-4 h-4" />
-                          Download
+                          {actionLoading === r.id.toString() ? '...' : 'Download'}
                         </Button>
-                        <Button size="sm" variant="ghost" className="flex items-center gap-2">
-                          <Heart className="w-4 h-4" />
-                          Favorite
-                        </Button>
-                        <Button size="sm" variant="ghost" className="flex items-center gap-2">
-                          <BookmarkPlus className="w-4 h-4" />
-                          Bookmark
+
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className={`flex items-center gap-2 ${r.isBookmarked ? 'text-blue-600' : ''}`}
+                          onClick={() => handleBookmark(r.id)}
+                          disabled={actionLoading === r.id.toString()}
+                        >
+                          <BookmarkPlus
+                            className={`w-4 h-4 ${r.isBookmarked ? 'fill-current text-blue-600' : ''}`}
+                          />
+                          {actionLoading === r.id.toString()
+                            ? '...'
+                            : r.isBookmarked
+                              ? 'Bookmarked'
+                              : 'Bookmark'}
                         </Button>
                       </>
                     ) : (
@@ -207,6 +287,41 @@ export default function SearchClient() {
                       </Link>
                     )}
                   </div>
+                </div>
+                <div>
+                  {r.courses && (
+                    <div
+                      className="
+                        text-sm"
+                    >
+                      <span className="text-muted-foreground">
+                        {r.courses.course_code}: {r.courses.course_title}
+                      </span>
+                      <span className="text-muted-foreground mx-2">•</span>
+                      <span className="text-muted-foreground">
+                        {r.courses.academic_levels?.level_number} Level
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="border border-t-1"></div>
+                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  <span className="text-primary">{r.file_type?.toUpperCase() || 'FILE'}</span>
+
+                  <span className="flex items-center gap-1">
+                    <Eye className="w-3 h-3" />
+                    {r.view_count || 0} views
+                  </span>
+
+                  <span className="flex items-center gap-1">
+                    <Download className="w-3 h-3" />
+                    {r.download_count || 0} download{r.download_count !== 1 ? 's' : ''}
+                  </span>
+
+                  <span className="flex items-center gap-1">
+                    <BookmarkPlus className="w-3 h-3" />
+                    {r.bookmark_count || 0} bookmark{r.bookmark_count !== 1 ? 's' : ''}
+                  </span>
                 </div>
               </Card>
             ))}
