@@ -9,8 +9,8 @@ import { PasswordInput } from '@/components/ui/passwordInput'
 import Link from 'next/link'
 import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
-import Image from "next/image"
-import { toast } from "sonner"
+import Image from 'next/image'
+import { toast } from 'sonner'
 
 export default function SignUpPage() {
   const [fullName, setFullName] = useState('')
@@ -20,7 +20,7 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailConfirmationSent, setEmailConfirmationSent] = useState(false)
-  
+
   const supabase = createClient()
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -103,7 +103,8 @@ export default function SignUpPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-foreground">
-                We&apos;ve sent a verification link to <strong>{email}</strong>. Click the link in the email to complete your account setup.
+                We&apos;ve sent a verification link to <strong>{email}</strong>. Click the link in
+                the email to complete your account setup.
               </p>
               <p className="text-sm text-muted-foreground">
                 Once verified, you can start browsing and contributing resources!
