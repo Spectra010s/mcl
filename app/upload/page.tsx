@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,7 +14,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Upload, CheckCircle, AlertCircle } from 'lucide-react'
+import { Upload } from 'lucide-react'
+import { toast } from 'sonner'
+
+interface Level {
+  id: number
+  level_number: number
+}
+
+interface Course {
+  id: number
+  course_code: string
+}
+
+interface Department {
+  id: number
+  full_name: string
+}
+
+interface Faculty {
+  id: number
+  full_name: string
+}
 
 export default function UploadPage() {
   const [title, setTitle] = useState('')
@@ -27,26 +47,26 @@ export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [dragging, setDragging] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-
-  const [faculties, setFaculties] = useState<any[]>([])
-  const [departments, setDepartments] = useState<any[]>([])
-  const [levels, setLevels] = useState<any[]>([])
-  const [courses, setCourses] = useState<any[]>([])
+  const [faculties, setFaculties] = useState<Faculty[]>([])
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [levels, setLevels] = useState<Level[]>([])
+  const [courses, setCourses] = useState<Course[]>([])
 
   const supabase = createClient()
-  const router = useRouter()
 
   useEffect(() => {
     const getFaculty = async () => {
-      const { data: facultyData } = await supabase.from('faculties').select('*').order('full_name')
+      const { data: facultyData } = await supabase
+        .from('faculties')
+        .select('id, full_name')
+        .order('full_name')
 
       if (facultyData) {
         setFaculties(facultyData)
       }
     }
     getFaculty()
-  }, [])
+  }, [supabase])
 
   const handleFacultyChange = async (facultyId: string) => {
     setFaculty(facultyId)
@@ -56,7 +76,7 @@ export default function UploadPage() {
     if (facultyId) {
       const { data: deptData } = await supabase
         .from('departments')
-        .select('*')
+        .select('id, full_name')
         .eq('faculty_id', facultyId)
         .order('full_name')
 
@@ -73,7 +93,7 @@ export default function UploadPage() {
     if (departmentId) {
       const { data: levelData } = await supabase
         .from('academic_levels')
-        .select('*')
+        .select('id, level_number')
         .eq('department_id', departmentId)
         .order('level_number')
 
@@ -90,7 +110,7 @@ export default function UploadPage() {
     if (levelId) {
       const { data: CourseData } = await supabase
         .from('courses')
-        .select('*')
+        .select('id, course_code')
         .eq('academic_level_id', levelId)
         .order('course_code')
 
@@ -131,14 +151,11 @@ export default function UploadPage() {
 
       if (isFileSupported(uploadedFile.name)) {
         setFile(uploadedFile)
-
-        setMessage(null)
       } else {
         setFile(null)
-        setMessage({
-          type: 'error',
-          text: `Unsupported file type: ${uploadedFile.name.split('.').pop()}. Please upload a document, presentation, or image.`,
-        })
+        toast.error(
+          `Unsupported file type: ${uploadedFile.name.split('.').pop()}. Please upload a document, presentation, or image.`,
+        )
         e.target.value = ''
       }
     }
@@ -158,13 +175,11 @@ export default function UploadPage() {
       const droppedFile = e.dataTransfer.files[0]
       if (isFileSupported(droppedFile.name)) {
         setFile(droppedFile)
-        setMessage(null)
       } else {
         setFile(null)
-        setMessage({
-          type: 'error',
-          text: `Unsupported file type: ${droppedFile.name.split('.').pop()}. Please drop a document, presentation, or image.`,
-        })
+        toast.error(
+          `Unsupported file type: ${droppedFile.name.split('.').pop()}. Please drop a document, presentation, or image.`,
+        )
       }
     }
   }
@@ -173,14 +188,11 @@ export default function UploadPage() {
     e.preventDefault()
 
     if (!title || !description || !faculty || !department || !level || !course || !file) {
-      setMessage({ type: 'error', text: 'Please fill in all required fields' })
+      toast.error('Please fill in all required fields')
       return
     }
 
-    console.log('Attempting to insert resource for Course ID:', course)
-
     setLoading(true)
-    setMessage(null)
 
     try {
       const {
@@ -192,12 +204,10 @@ export default function UploadPage() {
 
       const filePath = `${user.id}/${Date.now()}-${file.name}`
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('mclib')
-        .upload(filePath, file)
+      const { error: uploadError } = await supabase.storage.from('mclib').upload(filePath, file)
 
       if (uploadError) {
-        throw new Error('Supabase Storage Upload Failed.')
+        throw new Error('An Error Occured, Upload Failed.')
       }
 
       const { error: insertError } = await supabase.from('resources').insert({
@@ -212,12 +222,11 @@ export default function UploadPage() {
       })
 
       if (insertError) {
-        throw new Error('this is the error')
+        throw new Error('Upload Failed, Please try again')
       }
 
-      setMessage({
-        type: 'success',
-        text: `File uploaded successfully! It will appear after approval.
+      toast.success('Success', {
+        description: `File uploaded successfully! It will appear after approval.
          Thanks for Contributing to MCL `,
       })
       setTitle('')
@@ -229,7 +238,7 @@ export default function UploadPage() {
       setFile(null)
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Upload failed'
-      setMessage({ type: 'error', text: errorMessage })
+      toast.error('Upload Error', { description: errorMessage })
     } finally {
       setLoading(false)
     }
@@ -254,21 +263,6 @@ export default function UploadPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {message && (
-              <div
-                className={`p-4 rounded-lg flex gap-2 ${message.type === 'success' ? 'bg-green-50' : 'bg-red-50'}`}
-              >
-                {message.type === 'success' ? (
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                ) : (
-                  <AlertCircle className="w-5 h-5 text-red-600" />
-                )}
-                <p className={message.type === 'success' ? 'text-green-800' : 'text-red-800'}>
-                  {message.text}
-                </p>
-              </div>
-            )}
-
             {/* Basic Information Section */}
             <div className="space-y-4">
               <h3 className="font-semibold text-primary">Basic Information</h3>

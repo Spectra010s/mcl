@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {  Plus, ArrowLeft } from 'lucide-react'
+import { Plus, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 
@@ -62,7 +62,7 @@ export default function AdminContentPage() {
       setFaculties(await response.json())
     } catch (error) {
       console.error(error)
-      toast.error('Error', { description: 'Failed to fetch and refresh list.'})
+      toast.error('Error', { description: 'Failed to fetch and refresh list.' })
     } finally {
       setLoading(false)
     }
@@ -98,11 +98,8 @@ export default function AdminContentPage() {
 
       await refetchFaculties()
     } catch (error: unknown) {
-      const errorMsg: string = 
-    error instanceof Error 
-        ? error.message 
-        : "Adding Faculty Failed"; 
-toast.error('Error', { description: errorMsg });
+      const errorMsg: string = error instanceof Error ? error.message : 'Adding Faculty Failed'
+      toast.error('Error', { description: errorMsg })
     }
   }
 
@@ -133,11 +130,8 @@ toast.error('Error', { description: errorMsg });
 
       await refetchFaculties()
     } catch (error: unknown) {
-      const errorMsg: string = 
-    error instanceof Error 
-        ? error.message 
-        : "Adding Departments Failed"; 
-toast.error('Error', { description: errorMsg });
+      const errorMsg: string = error instanceof Error ? error.message : 'Adding Departments Failed'
+      toast.error('Error', { description: errorMsg })
     }
   }
 
