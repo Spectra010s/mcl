@@ -1,8 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -13,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { AlertCircle, CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
+import { CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import {
   Dialog,
@@ -56,17 +54,14 @@ interface AdminResourceProps {
 }
 
 export default function AdminResource({ initialResources }: AdminResourceProps) {
-  const router = useRouter()
   const [pendingFiles, setPendingFiles] = useState<PendingResource[]>(initialResources)
   const [selectedFile, setSelectedFile] = useState<PendingResource | null>(null)
   const [rejectionReason, setRejectionReason] = useState('')
   const [rejectionNotes, setRejectionNotes] = useState('')
   const [processing, setProcessing] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const handleApprove = async (resourceId: string) => {
     setProcessing(true)
-    setMessage(null)
 
     try {
       const response = await fetch(`/api/resources/${resourceId}/approve`, {
@@ -75,12 +70,11 @@ export default function AdminResource({ initialResources }: AdminResourceProps) 
 
       if (!response.ok) throw new Error('Response Approval failed')
 
-      setMessage({ type: 'success', text: 'File approved successfully' })
+      toast.success('success', { description: 'File approved successfully' })
       setPendingFiles(pendingFiles.filter(r => r.id !== resourceId))
     } catch (error: unknown) {
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Approval failed',
+      toast.error('Error', {
+        description: error instanceof Error ? error.message : 'Approval failed',
       })
     } finally {
       setProcessing(false)
@@ -91,12 +85,11 @@ export default function AdminResource({ initialResources }: AdminResourceProps) 
     if (!selectedFile) return
 
     if (!rejectionReason) {
-      setMessage({ type: 'error', text: 'Please select a rejection reason' })
+      toast.error('Error', { description: 'Please select a rejection reason' })
       return
     }
 
     setProcessing(true)
-    setMessage(null)
 
     try {
       const fullReason =
@@ -110,15 +103,14 @@ export default function AdminResource({ initialResources }: AdminResourceProps) 
 
       if (!response.ok) throw new Error('Rejection failed')
 
-      setMessage({ type: 'success', text: 'Resource rejected. User will be notified.' })
+      toast.success('Success', { description: 'Resource rejected. User will be notified.' })
       setPendingFiles(pendingFiles.filter(r => r.id !== selectedFile.id))
       setSelectedFile(null)
       setRejectionReason('')
       setRejectionNotes('')
     } catch (error: unknown) {
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Rejection failed',
+      toast.error('Error', {
+        description: error instanceof Error ? error.message : 'Rejection failed',
       })
     } finally {
       setProcessing(false)
@@ -139,21 +131,6 @@ export default function AdminResource({ initialResources }: AdminResourceProps) 
         <p className="text-muted-foreground mb-8">
           {pendingFiles.length} file{pendingFiles.length !== 1 ? 's' : ''} waiting for approval
         </p>
-
-        {message && (
-          <div
-            className={`p-4 rounded-lg flex gap-2 mb-6 ${message.type === 'success' ? 'bg-green-50' : 'bg-red-50'}`}
-          >
-            {message.type === 'success' ? (
-              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-            ) : (
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-            )}
-            <p className={message.type === 'success' ? 'text-green-800' : 'text-red-800'}>
-              {message.text}
-            </p>
-          </div>
-        )}
 
         {pendingFiles.length === 0 ? (
           <Card>
