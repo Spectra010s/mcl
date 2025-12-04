@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import { ChevronDown, BookOpen, Plus, Settings, Github, FileText, Folder } from 'lucide-react'
+import { BookOpen, Plus, Settings, Github, FileText, Folder } from 'lucide-react'
 import { User } from '@supabase/supabase-js'
 
 interface SidebarProps {
@@ -16,9 +14,7 @@ interface SidebarProps {
 
 export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const [user, setUser] = useState<User | null>(null)
-  const [browseOpen, setBrowseOpen] = useState(false)
   const [loading, setLoading] = useState(true)
-  const pathname = usePathname()
   const supabase = createClient()
   const sidebarRef = useRef<HTMLDivElement>(null)
 
