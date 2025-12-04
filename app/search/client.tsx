@@ -91,7 +91,7 @@ export default function SearchClient() {
 
         // --- PRIMARY SEARCH ATTEMPT: FTS ---
 
-        let { data, error } = await supabase
+        const { data, error } = await supabase
           .rpc('search_resources_fts', { search_term: query })
           .select(ResourceQuery)
           .limit(50)
