@@ -7,14 +7,49 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Heart, Download, BookmarkPlus, ChevronLeft } from 'lucide-react'
 import { useParams } from 'next/navigation'
+import type { User } from '@supabase/supabase-js'
+
+interface Resource {
+  id: string
+  title: string
+  description: string
+  file_type: string
+  file_size_bytes: number
+  view_count: number
+  uploaded_by: string | null
+
+  user_bookmarks: Array<{
+    user_id: string
+  }>
+
+  course_id: {
+    id: string
+    course_code: string
+    course_title: string
+    academic_level_id: {
+      level_number: number
+      department_id: {
+        full_name: string
+      }
+    }
+  } | null
+
+  resource_keywords: Array<{
+    keyword: string
+  }>
+
+  uploader: {
+    username: string | null
+  }
+}
 
 export default function ResourcePage() {
   const params = useParams()
   const resourceId = params.resourceId as string
-  const [resource, setResource] = useState<any>(null)
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [resource, setResource] = useState<Resource | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [isBookmarked, setIsBookmarked] = useState<boolean>(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const supabase = createClient()
