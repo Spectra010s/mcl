@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/passwordInput'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { AlertCircle, CheckCircle } from 'lucide-react'
+import { CheckCircle } from 'lucide-react'
+import Image from "next/image"
+import { toast } from "sonner"
 
 export default function SignUpPage() {
   const [fullName, setFullName] = useState('')
@@ -17,25 +18,23 @@ export default function SignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [emailConfirmationSent, setEmailConfirmationSent] = useState(false)
-  const router = useRouter()
+  
   const supabase = createClient()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setError(null)
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
+      toast.error('Passwords do not match')
       setIsLoading(false)
       return
     }
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -52,7 +51,7 @@ export default function SignUpPage() {
 
       setEmailConfirmationSent(true)
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'An error shit')
+      toast.error(error instanceof Error ? error.message : 'An error occured')
     } finally {
       setIsLoading(false)
     }
@@ -72,7 +71,7 @@ export default function SignUpPage() {
       })
       if (error) throw error
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Google signup failed')
+      toast.error(error instanceof Error ? error.message : 'Google signup failed')
     }
   }
 
@@ -86,7 +85,7 @@ export default function SignUpPage() {
       })
       if (error) throw error
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'GitHub signup failed')
+      toast.error(error instanceof Error ? error.message : 'GitHub signup failed')
     }
   }
 
@@ -104,8 +103,7 @@ export default function SignUpPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-foreground">
-                We've sent a verification link to <strong>{email}</strong>. Click the link in the
-                email to complete your account setup.
+                We&apos;ve sent a verification link to <strong>{email}</strong>. Click the link in the email to complete your account setup.
               </p>
               <p className="text-sm text-muted-foreground">
                 Once verified, you can start browsing and contributing resources!
@@ -125,7 +123,7 @@ export default function SignUpPage() {
   return (
     <div className="flex min-h-svh w-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-6 md:p-10">
       <div className="w-full max-w-md">
-        <img src="/logo.svg" alt="MCL" className="h-20 w-auto mx-auto mb-4 object-contain" />
+        <Image src="/logo.svg" alt="MCL" className="h-20 w-auto mx-auto mb-4 object-contain" />
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2 text-center">
             <h1 className="text-3xl font-bold text-primary">My Campus Library</h1>
@@ -197,12 +195,6 @@ export default function SignUpPage() {
                     className="border-primary/30"
                   />
                 </div>
-                {error && (
-                  <div className="p-3 rounded-lg bg-red-50 flex gap-2">
-                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                    <p className="text-sm text-red-800">{error}</p>
-                  </div>
-                )}
                 <Button
                   type="submit"
                   className="w-full bg-primary hover:bg-secondary text-white"
