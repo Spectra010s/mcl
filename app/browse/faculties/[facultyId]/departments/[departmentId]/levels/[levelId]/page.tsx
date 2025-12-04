@@ -2,7 +2,6 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 
 interface PageProps {
   params: Promise<{ facultyId: string; departmentId: string; levelId: string }>
@@ -115,7 +114,7 @@ export default async function CoursesPage(props: PageProps) {
                     {course.resources?.[0]?.count !== 1 ? 's' : ''}
                   </div>
                 </div>
-                <span className="text-sm ml-4">View →</span>
+                <span className="text-sm ml-4 text-primary">View →</span>
               </div>
             </Card>
           </Link>
