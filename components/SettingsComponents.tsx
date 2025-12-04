@@ -203,7 +203,7 @@ export default function SettingsComponents({
                   <Download className="w-5 h-5" />
                   Download History
                 </CardTitle>
-                <CardDescription>Files you've downloaded</CardDescription>
+                <CardDescription>Files you&apos;ve downloaded</CardDescription>
               </CardHeader>
               <CardContent>
                 {downloadHistory.length === 0 ? (
@@ -244,7 +244,7 @@ export default function SettingsComponents({
                   <BookmarkPlus className="w-5 h-5" />
                   Bookmarks
                 </CardTitle>
-                <CardDescription>Files you've bookmarked</CardDescription>
+                <CardDescription>Files you&apos;ve bookmarked</CardDescription>
               </CardHeader>
               <CardContent>
                 {bookmarks.length === 0 ? (
