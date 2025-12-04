@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Heart, Download, BookmarkPlus, Search, Eye } from 'lucide-react'
+import { Download, BookmarkPlus, Search, Eye } from 'lucide-react'
 
 export default function SearchClient() {
   const searchParams = useSearchParams()
@@ -17,7 +17,6 @@ export default function SearchClient() {
   const [results, setResults] = useState<any[]>([])
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(!!query)
-  const [isBookmarked, setIsBookmarked] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const supabase = createClient()
@@ -99,7 +98,6 @@ export default function SearchClient() {
         if (error) throw error
 
         finalResults = data || []
-        let isFuzzyFallback = false
 
         // --- SECONDARY SEARCH ATTEMPT: Fuzzy ---
         if (finalResults.length === 0) {
@@ -111,7 +109,6 @@ export default function SearchClient() {
           if (fuzzyResponse.error) throw fuzzyResponse.error
 
           finalResults = fuzzyResponse.data || []
-          isFuzzyFallback = true
         }
 
         const processedResults = finalResults.map(resource => {
@@ -193,7 +190,7 @@ export default function SearchClient() {
       )
     } catch (error) {
       console.error('Bookmark error:', error)
-      alert('Failed to bookmark.')
+      toast.error('Failed to bookmark.')
     } finally {
       setActionLoading(null)
     }

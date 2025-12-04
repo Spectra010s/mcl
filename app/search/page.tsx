@@ -23,7 +23,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   }
 }
 
-export default async function SearchPage({ searchParams }: PageProps) {
+export default async function SearchPage() {
   return (
     <>
       <SearchClient />
