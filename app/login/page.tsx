@@ -9,20 +9,19 @@ import { PasswordInput } from '@/components/ui/passwordInput'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { AlertCircle } from 'lucide-react'
+import Image from 'next/image'
+import { toast } from 'sonner'
 
 export default function LoginPage() {
   const [emailOrUsername, setEmailOrUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const router = useRouter()
   const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setError(null)
 
     try {
       let loginEmail = emailOrUsername
@@ -46,11 +45,11 @@ export default function LoginPage() {
         password,
       })
 
-      if (error) throw error
+      if (error) throw new Error('An error occurred, please try again')
 
       router.push('/browse/faculties')
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'An error occurred')
+      toast.error(error instanceof Error ? error.message : 'An error occurred')
     } finally {
       setIsLoading(false)
     }
@@ -64,9 +63,9 @@ export default function LoginPage() {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
       })
-      if (error) throw error
+      if (error) throw new Error('An error occurred, please try again')
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Google login failed')
+      toast.error(error instanceof Error ? error.message : 'Google login failed')
     }
   }
 
@@ -78,16 +77,16 @@ export default function LoginPage() {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
       })
-      if (error) throw error
+      if (error) throw new Error('An error occurred, please try again')
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'GitHub login failed')
+      toast.error(error instanceof Error ? error.message : 'GitHub login failed')
     }
   }
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-6 md:p-10">
       <div className="w-full max-w-md">
-        <img src="/logo.svg" alt="MCL" className="h-20 w-auto mx-auto mb-4 object-contain" />
+        <Image src="/logo.svg" alt="MCL" className="h-20 w-auto mx-auto mb-4 object-contain" />
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2 text-center">
             <h1 className="text-3xl font-bold text-primary">My Campus Library</h1>
@@ -123,12 +122,6 @@ export default function LoginPage() {
                     className="border-primary/30"
                   />
                 </div>
-                {error && (
-                  <div className="p-3 rounded-lg bg-red-50 flex gap-2">
-                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                    <p className="text-sm text-red-800">{error}</p>
-                  </div>
-                )}
                 <Button
                   type="submit"
                   className="w-full bg-primary hover:bg-secondary text-white"
@@ -149,6 +142,7 @@ export default function LoginPage() {
                   <Button
                     type="button"
                     variant="outline"
+                    disabled={isLoading}
                     onClick={handleGoogleLogin}
                     className="border-primary/30 bg-transparent"
                   >
@@ -160,6 +154,7 @@ export default function LoginPage() {
                   <Button
                     type="button"
                     variant="outline"
+                    disabled={isLoading}
                     onClick={handleGithubLogin}
                     className="border-primary/30 bg-transparent"
                   >
@@ -175,7 +170,7 @@ export default function LoginPage() {
                 </div>
               </div>
               <div className="mt-4 text-center text-sm">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link href="/signup" className="text-primary font-semibold hover:underline">
                   Create one
                 </Link>
