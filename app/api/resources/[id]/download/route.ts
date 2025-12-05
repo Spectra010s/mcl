@@ -32,9 +32,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         .eq('id', resourceId),
     ])
 
-    let filePath: string
-    filePath = resource.file_url
-    if (!filePath) throw new Error('Invalid URL')
+    if (!resource.file_url) throw new Error('Invalid URL')
 
     const { data: signed, error: signedError } = await supabase.storage
       .from('mclib')
