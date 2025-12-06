@@ -3,6 +3,8 @@ import { Eye, EyeOff } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
+type PasswordInputProps = React.ComponentPropsWithoutRef<'input'>
+
 const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
   ({ className, ...props }, ref) => {
     const [showPassword, setShowPassword] = React.useState(false)
@@ -12,12 +14,9 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
 
     const handleToggle = () => {
       const input = inputRef.current
-
       if (input) {
         const currentCursorPosition = input.selectionStart
-
         setShowPassword(prev => !prev)
-
         requestAnimationFrame(() => {
           if (currentCursorPosition !== null) {
             input.setSelectionRange(currentCursorPosition, currentCursorPosition)
@@ -53,6 +52,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
     )
   },
 )
+
 PasswordInput.displayName = 'PasswordInput'
 
 export { PasswordInput }
