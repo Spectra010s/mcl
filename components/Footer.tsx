@@ -97,12 +97,12 @@ export function Footer() {
           </div>
         </div>
 
-                    <div className="my-8 bg-sidebar-border border-t-2"></div>
+        <div className="my-8 bg-sidebar-border border-t-2"></div>
 
         <div className="flex justify-between items-center gap-2 text-sm text-muted-foreground">
           <div className="flex flex-col mb-1">
-          <p>&copy; 2025 My Campus Library. All rights reserved.</p>
-          <p>Made with ❤️ by Spectra010s</p>
+            <p>&copy; 2025 My Campus Library. All rights reserved.</p>
+            <p>Made with ❤️ by Spectra010s</p>
           </div>
           <Link
             href="https://github.com/Spectra010s/mcl"

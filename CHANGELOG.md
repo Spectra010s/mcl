@@ -4,7 +4,7 @@
 
 This document summarizes all changes made to My Campus Library (MCL) since the initial commit.
 
-## Current Version: v0.10.0
+## Current Version: v1.0.0
 
 MCL follows [Semantic Versioning](https://semver.org/) (SemVer) for version management.
 
@@ -18,17 +18,140 @@ MAJOR.MINOR.PATCH
 
 ## Version History
 
+### 1.0.0 - Major Release
+
+**Release Date:** 2025-12-6
+**Status:** Production
+
+**Features:**
+
+- feat: add shadcn sonner ui
+- feat: add sonner toast for notifs to replace success message
+- feat: add superadmin createClient using service role key
+- feat: add admin page for adding new data on faculties and departments
+- feat(api): add stats route for admin dashboard
+- feat(admin): add user management page
+- feat: add shadcn badge and table for AdminUserpage
+- feat(api): add admin users router
+- feat: add api route for handling data inserting
+- feat: add seed data sql
+
+**Fix:**
+
+- fix: update AdminStats components with tested developmemt code
+- fix(search): remove unused state and replace bookmark alert with toast
+- fix(middleware): correct updateSession Typescript tests and add admin guard test mocks
+- fix(test): removed unused props passing and chnaged id to number from string
+- fix(departments-page): correct faculty select fields to match database
+- fix(course-page): remove unused props to resolve type errors
+- fix(settings): correct data mapping for initial props
+- fix(settings): add proper typing and replace message state with toast notifications
+- fix: changed id to properly use number instead of string
+- fix(admin): import toast from sonner for toast api usage
+- fix(ui): add proper typing for PasswordInput component
+- fix(upload): add InputEvent types for controlled inputs
+- fix(search): TypeScript and rendering fixes for search page
+- fix(typescript): add InputEvent type to LoginPage inputs
+- fix(signup): add explicit InputEvent type for form onChange handlers
+- fix: add type Metadata as missing import
+- fix(footer): remove import of separator and fix eith custom div border code
+
+**Refractor:**
+
+- refactor(upload): remove message state, integrate Sonner toast, add typed interfaces, specific supabase selects, and remove unused router
+  -refactor(AdminStats): switch to API route for fetching stats and add error toast
+- refactor(signup): migrate error handling to Sonner toast and remove unused code
+- refactor(AdminResource): replace message state with toast notifications
+- refactor: add Resource interface and replace all any types in ResourcePage
+- refactor: remove unused dept and level from CourseDetailPage
+- refactor(login): replace local error state with toast in LoginPage and use Next/Image
+- refactor: remove manual auth checks in ReviewsPage (handled by middleware)
+- refactor: remove auth checks from AdminPage since middleware handles them
+- refactor: remove unused request parameter from logoutPage
+- refactor: remove unnecessary filePath variable in download route
+- refactor: update Resource and user_bookmarks IDs to number
+- refactor: add Resource interface, type user and results, fix JSX quotes
+- refactor(api): add admin auth to stats route
+- refactor(api): add admin auth check for admin users route
+- refactor(api): add admin auth check for admin content route
+- refactor(apis): change error message for unauthorized api access, admin level
+
+**Chores:**
+
+- chore: replaced let with const in `app/search/client.tsx`
+- chore: severity vulnerability fix for nextJs
+- chore: update changelog for 0.10.0
+- chore: bump versiom json to 0.10.0
+- chore: remove unused codes and imports
+- chore: remove interface as its of no use
+- chore: replaced `'` with `&apos;` in SettingsComponents
+- chore: removed unused Button import in levels page
+- chore: remove unused Heart icon import from ResourcePage
+- chore: ran prettier in repo
+- chore: removed undefined variable error
+- chore: remove unused in AdminStats file
+- chore: remove unused components ui file, separator.tsx
+- chore: add jest types
+- chore: removed unused mistake import from vitest
+- chore: ran prettier in repo
+
+**Files Created:**
+
+- `api/admin/users/`
+- `api/content/dbmcl/`
+- `api/stats/dbmcl/`
+- `app/admin/content/`
+- `app/admin/users/`
+- `lib/supabase/admin`
+- `components/ui/table.tsx`
+- `components/ui/badge.tsx`
+- `components/ui/sonner.tsx`
+- `scripts/seed_data.sql`
+
+**Files Modified:**
+
+- `app/api/user/update`
+- `app/resource/[resourceId]/page.tsx`
+- `app/layout.tsx`
+- `app/api/logout/route.ts`
+- `app/browse/faculties/[facultyId]/departments/[departmentId]/levels/[levelId]/page.tsx/`
+- - `app/browse/faculties/[facultyId]/departments/[departmentId]/page.tsx/`
+- `app/resource/[resourceId]/page.tsx`
+- `app/browse/faculties/[facultyId]/departments/[departmentId]/levels/[levelId]/courses/[courseId]/page.tsx`
+- `app/admin/page.tsx`
+- `app/admin/reviews/page.tsx`
+- `app/search/client.tsx`
+- `app/search/page.tsx`
+- `app/upload/page.tsx`
+- `app/signup/page.tsx`
+- `app/login/page.tsx`
+- `app/settings/page.tsx`
+- `components/AdminResource.tsx`
+- `components/AdminStats.tsx`
+- `components/SettingsComponents.tsx`
+- `components/ui/passwordInput.tsx`
+- `components/Sidebar.tsx`
+- `components/ResourceCarousel.tsx`
+- `package.json`
+- `package-lock.json`
+- `CHANGELOG.md`
+
+**Files Deleted:**
+
+- `components/ui/separator.tsx`
+
 ### 0.10.0 - Minor Release
 
 **Release Date:** 2025-12-2
 **Status:** Development
 
 **Features:**
+
 - feat: add bookmark api route
 - feat: enable downloading and bookmarking funtions for files for authUsers
 - feat: add download function with proxy to return new Headers
-- feat: add api route for search history update 
-- feat: add fts funtion and remove view function 
+- feat: add api route for search history update
+- feat: add fts funtion and remove view function
 - feat: add download and bookmark function for list of files
 
 **Fix:**
@@ -36,12 +159,12 @@ MAJOR.MINOR.PATCH
 - fix: update upload page to use file path instead of publicUrl
 - fix: replaced view count funtion that logs bothusers and anon
 
-
 **Refractor:**
+
 - refactor(settings): Migrate Settings flow to Server Component architecture
 
-
 **Chores:**
+
 - chore: add date-fns package
 - chore: bump npm json version
 - chore: ran prettier in repo
@@ -49,12 +172,11 @@ MAJOR.MINOR.PATCH
 **Files Created:**
 
 - `app/settings/`
-- `scripts/fix_view_count_history_function.sql` 
+- `scripts/fix_view_count_history_function.sql`
 - `app/api/resources/[id]/download/route.ts`
 - `app/api/resources/[id]/bookmark/route.ts`
 - `app/api/search/route.ts`
 - `scripts/fts_full_text_search_function.sql`
-
 
 - **Files Modified:**
 
@@ -63,7 +185,7 @@ MAJOR.MINOR.PATCH
 - `app/api/logout`
 - `app/api/user/update`
 - `app/resource/[resourceId]/page.tsx`
-- `app/upload/page.tsx` 
+- `app/upload/page.tsx`
 - `scripts/schema.sql`
 - `app/search/client.tsx`
 - `package.json`
