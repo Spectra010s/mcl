@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Download, BookmarkPlus, Search, Eye } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
+import { toast } from 'sonner'
 
 interface Resource {
   id: number
@@ -34,6 +35,8 @@ interface Resource {
     }[]
   }[]
 }
+
+type InputEvent = React.ChangeEvent<HTMLInputElement>
 
 export default function SearchClient() {
   const searchParams = useSearchParams()
@@ -123,7 +126,7 @@ export default function SearchClient() {
 
         if (error) throw error
 
-        finalResults = data || []
+        finalResults = Array.isArray(data) ? data : data ? [data] : []
 
         // --- SECONDARY SEARCH ATTEMPT: Fuzzy ---
         if (finalResults.length === 0) {
@@ -134,7 +137,11 @@ export default function SearchClient() {
 
           if (fuzzyResponse.error) throw fuzzyResponse.error
 
-          finalResults = fuzzyResponse.data || []
+          finalResults = Array.isArray(fuzzyResponse.data)
+            ? fuzzyResponse.data
+            : fuzzyResponse.data
+              ? [fuzzyResponse.data]
+              : []
         }
 
         const processedResults = finalResults.map(resource => {
@@ -233,7 +240,7 @@ export default function SearchClient() {
               type="text"
               placeholder="Search by pdf name, filename, or course code..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={(e: InputEvent) => setSearchQuery(e.target.value)}
               className="pl-12 pr-4 py-3 text-lg"
             />
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -312,18 +319,17 @@ export default function SearchClient() {
                   </div>
                 </div>
                 <div>
-                  {r.courses && (
-                    <div
-                      className="
-                        text-sm"
-                    >
-                      <span className="text-muted-foreground">
-                        {r.courses.course_code}: {r.courses.course_title}
-                      </span>
-                      <span className="text-muted-foreground mx-2">•</span>
-                      <span className="text-muted-foreground">
-                        {r.courses.academic_levels?.level_number} Level
-                      </span>
+                  {r.courses && r.courses.length > 0 && (
+                    <div className="text-sm">
+                      {r.courses.map(course => (
+                        <span key={course.id} className="text-muted-foreground">
+                          {course.course_code}: {course.course_title}
+                          <span className="mx-2">•</span>
+                          {course.academic_levels?.map(level => (
+                            <span key={level.level_number}>{level.level_number} Level</span>
+                          ))}
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>

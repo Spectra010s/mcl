@@ -12,6 +12,8 @@ import { CheckCircle } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 
+type InputEvent = React.ChangeEvent<HTMLInputElement>
+
 export default function SignUpPage() {
   const [fullName, setFullName] = useState('')
   const [username, setUsername] = useState('')
@@ -146,7 +148,7 @@ export default function SignUpPage() {
                     placeholder="Adetayo Ade"
                     required
                     value={fullName}
-                    onChange={e => setFullName(e.target.value)}
+                    onChange={(e: InputEvent) => setFullName(e.target.value)}
                     className="border-primary/30"
                   />
                 </div>
@@ -158,7 +160,7 @@ export default function SignUpPage() {
                     placeholder="Spectra010s"
                     required
                     value={username}
-                    onChange={e => setUsername(e.target.value)}
+                    onChange={(e: InputEvent) => setUsername(e.target.value)}
                     className="border-primary/30"
                   />
                 </div>
@@ -170,7 +172,7 @@ export default function SignUpPage() {
                     placeholder="you@email.com"
                     required
                     value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    onChange={(e: InputEvent) => setEmail(e.target.value)}
                     className="border-primary/30"
                   />
                 </div>
@@ -181,7 +183,7 @@ export default function SignUpPage() {
                     placeholder="Create a strong password"
                     required
                     value={password}
-                    onChange={e => setPassword(e.target.value)}
+                    onChange={(e: InputEvent) => setPassword(e.target.value)}
                     className="border-primary/30"
                   />
                 </div>
@@ -192,7 +194,7 @@ export default function SignUpPage() {
                     placeholder="Confirm your password"
                     required
                     value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
+                    onChange={(e: InputEvent) => setConfirmPassword(e.target.value)}
                     className="border-primary/30"
                   />
                 </div>

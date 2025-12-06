@@ -146,12 +146,7 @@ export default async function CourseDetailPage(props: PageProps) {
             <ResourceCarousel
               key={type}
               title={getFileTypeTitle(type)}
-              fileType={type}
               resources={groupedByType[type]}
-              facultyId={facultyId}
-              departmentId={departmentId}
-              levelId={levelId}
-              courseId={courseId}
             />
           ))}
         </div>

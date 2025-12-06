@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card'
 import { format } from 'date-fns'
 
 interface Resource {
-  id: string
+  id: number
   title: string
   file_type: string
   download_count: number

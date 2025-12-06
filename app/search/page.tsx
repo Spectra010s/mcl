@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import SearchClient from './client'
 
 type PageProps = {
@@ -25,8 +26,8 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 
 export default async function SearchPage() {
   return (
-    <>
+    <Suspense fallback={<div className="p-12 text-center">Loading...</div>}>
       <SearchClient />
-    </>
+    </Suspense>
   )
 }
