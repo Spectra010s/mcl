@@ -10,12 +10,39 @@ import { Label } from '@/components/ui/label'
 import { LogOut, Download, BookmarkPlus, Search } from 'lucide-react'
 import { AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
+import { toast } from 'sonner'
+
+interface Resource {
+  id: number
+  title: string
+  file_type: string
+}
+
+interface Download {
+  id: number
+  downloaded_at: string
+  resources: Resource
+}
+
+interface Bookmark {
+  id: number
+  created_at: string
+  resources: Resource
+}
+
+interface Profile {
+  id: string
+  first_name: string
+  last_name: string
+  email: string
+  username: string
+}
 
 interface SettingsComponentsProps {
   initialSearches: string[]
-  initialDownloads: downloads[]
-  initialBookmarks: bookmarks[]
-  initialProfile: profile
+  initialDownloads: Download[]
+  initialBookmarks: Bookmark[]
+  initialProfile: Profile
 }
 export default function SettingsComponents({
   initialSearches,
@@ -24,37 +51,19 @@ export default function SettingsComponents({
   initialProfile,
 }: SettingsComponentsProps) {
   const router = useRouter()
-  const p = initialProfile
+  const p: Profile = initialProfile
   const [fullName, setFullName] = useState(`${p.first_name || ''} ${p.last_name || ''}`.trim())
   const [username, setUsername] = useState(p.username || '')
   const [profileLoading, setProfileLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [downloadHistory, setDownloadHistory] = useState<downloads[]>(initialDownloads)
-  const [bookmarks, setBookmarks] = useState<bookmarks[]>(initialBookmarks)
+  const [downloadHistory, setDownloadHistory] = useState<Download[]>(initialDownloads)
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>(initialBookmarks)
   const [recentSearches, setRecentSearches] = useState<string[]>(initialSearches)
 
   const [activeTab, setActiveTab] = useState('profile')
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout | null = null
-
-    if (message) {
-      timer = setTimeout(() => {
-        setMessage(null)
-      }, 3000)
-    }
-
-    return () => {
-      if (timer) {
-        clearTimeout(timer)
-      }
-    }
-  }, [message])
-
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
     setProfileLoading(true)
-    setMessage(null)
 
     try {
       const newProfile = { fullName, username }
@@ -69,11 +78,10 @@ export default function SettingsComponents({
 
       if (response.status === 400) throw new Error(uperror.error)
 
-      setMessage({ type: 'success', text: 'Profile updated successfully' })
+      toast.success('Success', { description: 'Profile updated successfully' })
     } catch (error: unknown) {
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to update profile',
+      toast.error('Error', {
+        description: error instanceof Error ? error.message : 'Failed to update profile',
       })
     } finally {
       setProfileLoading(false)
@@ -91,9 +99,8 @@ export default function SettingsComponents({
         console.error('Logout failed:', error.message)
       }
     } catch (error: unknown) {
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Logout failed',
+      toast.error('Error', {
+        description: error instanceof Error ? error.message : 'Logout failed',
       })
     } finally {
       router.refresh()
@@ -171,22 +178,6 @@ export default function SettingsComponents({
                       />
                     </div>
                   </div>
-
-                  {message && (
-                    <div
-                      className={`p-3 rounded-lg flex gap-2 ${message.type === 'success' ? 'bg-green-50' : 'bg-red-50'}`}
-                    >
-                      <AlertCircle
-                        className={`w-5 h-5 flex-shrink-0 ${
-                          message.type === 'success' ? 'text-green-600' : 'text-red-600'
-                        }`}
-                      />
-                      <p className={message.type === 'success' ? 'text-green-800' : 'text-red-800'}>
-                        {message.text}
-                      </p>
-                    </div>
-                  )}
-
                   <Button type="submit" disabled={profileLoading}>
                     {profileLoading ? 'Saving...' : 'Save Changes'}
                   </Button>
@@ -215,15 +206,15 @@ export default function SettingsComponents({
                     {downloadHistory.map(download => (
                       <div
                         key={download.id}
-                        className="flex items-between justify-between p-3 border rounded-lg"
+                        className="flex items-center justify-between p-3 border rounded-lg"
                       >
                         <div className="flex-1">
-                          <h4 className="font-semibold">{download.resources?.title}</h4>
+                          <h4 className="font-semibold">{download.resources.title}</h4>
                           <p className="text-sm text-muted-foreground">
                             Downloaded on {format(new Date(download.downloaded_at), 'yyyy-MM-dd')}
                           </p>
                         </div>
-                        <Link href={`/resource/${download.resources?.id}`}>
+                        <Link href={`/resource/${download.resources.id}`}>
                           <Button variant="outline" size="sm">
                             View
                           </Button>
@@ -256,15 +247,15 @@ export default function SettingsComponents({
                     {bookmarks.map(books => (
                       <div
                         key={books.id}
-                        className="flex items-between justify-between p-3 border rounded-lg"
+                        className="flex items-center justify-between p-3 border rounded-lg"
                       >
                         <div className="flex-1">
-                          <h4 className="font-semibold">{books.resources?.title}</h4>
+                          <h4 className="font-semibold">{books.resources.title}</h4>
                           <p className="text-sm text-muted-foreground">
                             Added on {format(new Date(books.created_at), 'yyyy-MM-dd')}
                           </p>
                         </div>
-                        <Link href={`/resource/${books.resources?.id}`}>
+                        <Link href={`/resource/${books.resources.id}`}>
                           <Button variant="outline" size="sm">
                             View
                           </Button>
@@ -322,21 +313,6 @@ export default function SettingsComponents({
                   <p className="text-sm text-muted-foreground mb-4">
                     Logging out will end your current session
                   </p>
-                  {message && (
-                    <div
-                      className={`p-3 rounded-lg flex gap-2 ${message.type === 'success' ? 'bg-green-50' : 'bg-red-50'}`}
-                    >
-                      <AlertCircle
-                        className={`w-5 h-5 flex-shrink-0 ${
-                          message.type === 'success' ? 'text-green-600' : 'text-red-600'
-                        }`}
-                      />
-                      <p className={message.type === 'success' ? 'text-green-800' : 'text-red-800'}>
-                        {message.text}
-                      </p>
-                    </div>
-                  )}
-
                   <Button
                     variant="destructive"
                     onClick={handleLogout}
