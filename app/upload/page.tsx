@@ -37,6 +37,8 @@ interface Faculty {
   full_name: string
 }
 
+type InputEvent = React.ChangeEvent<HTMLInputElement>
+
 export default function UploadPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -272,7 +274,7 @@ export default function UploadPage() {
                 <Input
                   id="title"
                   value={title}
-                  onChange={e => setTitle(e.target.value)}
+                  onChange={(e: InputEvent) => setTitle(e.target.value)}
                   placeholder="Enter the title for the file"
                   className="border-primary/30"
                   required
@@ -284,7 +286,9 @@ export default function UploadPage() {
                 <Textarea
                   id="description"
                   value={description}
-                  onChange={e => setDescription(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                    setDescription(e.target.value)
+                  }
                   placeholder="A short description on the content (e.g. Lecture notes covering modules 1-3)."
                   rows={4}
                   className="border-primary/30"
