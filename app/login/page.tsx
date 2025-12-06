@@ -12,6 +12,8 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 
+type InputEvent = React.ChangeEvent<HTMLInputElement>
+
 export default function LoginPage() {
   const [emailOrUsername, setEmailOrUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -107,7 +109,7 @@ export default function LoginPage() {
                     placeholder="you@email.com"
                     required
                     value={emailOrUsername}
-                    onChange={e => setEmailOrUsername(e.target.value)}
+                    onChange={(e: InputEvent) => setEmailOrUsername(e.target.value)}
                     className="border-primary/30"
                   />
                 </div>
@@ -118,7 +120,7 @@ export default function LoginPage() {
                     required
                     placeholder="Enter your password"
                     value={password}
-                    onChange={e => setPassword(e.target.value)}
+                    onChange={(e: InputEvent) => setPassword(e.target.value)}
                     className="border-primary/30"
                   />
                 </div>
