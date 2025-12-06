@@ -28,7 +28,7 @@ export default async function SettingsPage() {
     .order('downloaded_at', { ascending: false })
     .limit(20)
 
-  const { data: bookmarks } = await supabase
+  const { data: bookmark } = await supabase
     .from('user_bookmarks')
     .select('*, resources(id, title, file_type)')
     .eq('user_id', user.id)
@@ -48,9 +48,9 @@ export default async function SettingsPage() {
 
       {/* TAB NAVIGATION */}
       <SettingsComponents
-        initialSearches={searches || []}
+        initialSearches={searches?.map(s => s.query) || []}
         initialDownloads={downloads || []}
-        initialBookmarks={bookmarks || []}
+        initialBookmarks={bookmark || []}
         initialProfile={profile}
       />
     </div>
