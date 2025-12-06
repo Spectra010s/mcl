@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { Separator } from '@/components/ui/separator'
 import Image from 'next/image'
 
 export function Footer() {
@@ -55,7 +54,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="https://github.com/mycampuslib/mcl"
+                  href="https://github.com/Spectra010s/mcl"
                   target="_blank"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
@@ -64,7 +63,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="https://github.com/mycampuslib/mcl"
+                  href="https://github.com/Spectra010s/mcl"
                   target="_blank"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
@@ -98,10 +97,13 @@ export function Footer() {
           </div>
         </div>
 
-        <Separator className="my-8" />
+                    <div className="my-8 bg-sidebar-border border-t-2"></div>
 
         <div className="flex justify-between items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex flex-col mb-1">
           <p>&copy; 2025 My Campus Library. All rights reserved.</p>
+          <p>Made with ❤️ by Spectra010s</p>
+          </div>
           <Link
             href="https://github.com/Spectra010s/mcl"
             target="_blank"
