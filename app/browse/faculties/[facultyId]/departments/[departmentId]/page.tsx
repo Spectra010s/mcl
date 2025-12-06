@@ -13,7 +13,7 @@ async function getDepartmentData(departmentId: string, facultyId: string) {
   const supabase = await createClient()
 
   const [facultyResult, deptResult] = await Promise.all([
-    supabase.from('faculties').select('short_name').eq('id', facultyId).single(),
+    supabase.from('faculties').select('short_name, full_name').eq('id', facultyId).single(),
 
     supabase
       .from('departments')
