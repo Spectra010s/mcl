@@ -1,7 +1,11 @@
 {
   "name": "mcl",
-  "version": "0.10.0",
-  "private": true,
+  "author": "Spectra010s",   
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Spectra010s/mcl.git"
+  },
+  "keywords": ["mcl", "mycampuslib", "mclib", "mycampuslibrary", "library", "education"],
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build",
