@@ -130,5 +130,5 @@ function escapeHtml(text: string): string {
     '"': '&quot;',
     "'": '&#039;',
   }
-  return text.replace(/[&<>"']/g, char => map[char])
+  return text.replace(/[&<>"']/g, (char) => map[char])
 }

@@ -41,7 +41,7 @@ export default function SignUpPage() {
         password,
         options: {
           emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/`,
+            process.env.NEXT_PUBLIC_REDIRECT_URL,
           data: {
             username: username,
             first_name: fullName.split(' ')[0],
@@ -64,7 +64,7 @@ export default function SignUpPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: process.env.NEXT_PUBLIC_REDIRECT_URL,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -82,7 +82,7 @@ export default function SignUpPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: process.env.NEXT_PUBLIC_REDIRECT_URL,
         },
       })
       if (error) throw error
