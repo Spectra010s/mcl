@@ -23,16 +23,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const { data: resource } = await supabase
       .from('resources')
-      .select('*, users:uploaded_by(email, first_name)')
+      .select('*, users:uploaded_by(email, username)')
       .eq('id', id)
       .single()
 
     if (!resource) {
       return NextResponse.json({ error: 'Resource not found' }, { status: 404 })
     }
-
-    const name = resource.users.first_name
-    const userFirstName = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
 
     const { error: updateError } = await supabase
       .from('resources')
@@ -43,7 +40,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       console.error('[API] Update Error:', JSON.stringify(updateError, null, 2))
     }
 
-    await sendApprovalEmail(resource.users.email, userFirstName, resource.title, resource.id)
+    await sendApprovalEmail(
+      resource.users.email,
+      resource.users.username,
+      resource.title,
+      resource.id,
+    )
 
     return NextResponse.json({
       success: true,

@@ -29,7 +29,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const { data: resource } = await supabase
       .from('resources')
-      .select('*, users:uploaded_by(email, first_name)')
+      .select('*, users:uploaded_by(email, username)')
       .eq('id', id)
       .single()
 
@@ -47,10 +47,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     if (updateError) throw updateError
 
-    const name = resource.users.first_name
-    const userFirstName = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
-
-    await sendRejectionEmail(resource.users.email, userFirstName, resource.title, reason)
+    await sendRejectionEmail(resource.users.email, resource.users.username, resource.title, reason)
 
     return NextResponse.json({
       success: true,

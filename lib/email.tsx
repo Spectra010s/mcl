@@ -4,13 +4,13 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function sendRejectionEmail(
   userEmail: string,
-  firstName: string,
+  username: string,
   resourceTitle: string,
   rejectionReason: string,
 ) {
   try {
-    const { error } = await resend.emails.send({
-      from: 'My Campus Library <onboarding@resend.dev>',
+    const { data, error } = await resend.emails.send({
+      from: 'My Campus Library <mcl@biuld.app>',
       to: userEmail,
       replyTo: 'spectra010s@gmail.com',
       subject: `Your file upload was not approved - "${resourceTitle}"`,
@@ -18,7 +18,7 @@ export async function sendRejectionEmail(
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #182b5c;">Resource Upload Review</h2>
           
-          <h1>Hi, ${firstName}</h1>
+          <h2>Hi, ${username}</h2>
           <p>Thank you for uploading to My Campus Library.</p>
           
           <p>Unfortunately, your file <strong>"${resourceTitle}"</strong> did not meet our approval criteria.</p>
@@ -64,13 +64,13 @@ export async function sendRejectionEmail(
 
 export async function sendApprovalEmail(
   userEmail: string,
-  firstName: string,
+  username: string,
   resourceTitle: string,
   resourceId: string,
 ) {
   try {
     const { error } = await resend.emails.send({
-      from: 'My Campus Library <onboarding@resend.dev>',
+      from: 'My Campus Library <mcl@biuld.app>',
       to: userEmail,
       replyTo: 'spectra010s@gmail.com',
       subject: `Your resource was approved! - "${resourceTitle}"`,
@@ -78,7 +78,7 @@ export async function sendApprovalEmail(
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #0256a5;">Resource Approved!</h2>
           
-         <h1>Hi, ${firstName}</h1>
+         <h2>Hi, ${username}</h2>
           <p>Great news! Your file <strong>"${resourceTitle}"</strong> has been approved and is now live on My Campus Library.</p>
           
           <div style="background-color: #e8f5e9; padding: 15px; border-left: 4px solid #4caf50; margin: 20px 0;">
@@ -88,7 +88,7 @@ export async function sendApprovalEmail(
           
           <h4>View your resource:</h4>
           <p>
-            <a href="https://mycampuslibrary.com/resource/${resourceId}" 
+            <a href="http://mycampuslib.vercel.app/resource/${resourceId}" 
                style="background-color: #0256a5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
               View Resource
             </a>
@@ -130,5 +130,5 @@ function escapeHtml(text: string): string {
     '"': '&quot;',
     "'": '&#039;',
   }
-  return text.replace(/[&<>"']/g, (char) => map[char])
+  return text.replace(/[&<>"']/g, char => map[char])
 }
