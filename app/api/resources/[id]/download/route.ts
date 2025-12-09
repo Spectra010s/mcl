@@ -50,7 +50,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     const extension = resource.file_type || 'pdf'
-    const filename = `${resource.title}.${extension}`.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const filename = `${resource.title}-MCL.${extension}`.replace(/[^a-zA-Z0-9._-]/g, '_')
 
     return new NextResponse(fileResponse.body, {
       status: 200,
