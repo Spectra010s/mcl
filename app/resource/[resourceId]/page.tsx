@@ -227,7 +227,7 @@ export default function ResourcePage() {
         {resource.description && (
           <Card className="p-4 mb-8">
             <h2 className="font-semibold text-lg">Description</h2>
-            <p className="text-foreground whitespace-pre-wrap line-clamp-2">
+            <p className="text-foreground whitespace-pre-wrap ">
               {resource.description}
             </p>
           </Card>
