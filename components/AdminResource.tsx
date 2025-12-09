@@ -161,7 +161,7 @@ export default function AdminResource({ initialResources }: AdminResourceProps) 
                 <CardContent className="space-y-4">
                   <div>
                     <p className="text-sm font-semibold text-muted-foreground mb-1">Description</p>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">
+                    <p className="text-sm text-foreground whitespace-pre-wrap break-all">
                       {resource.description || 'No description provided'}
                     </p>
                   </div>
