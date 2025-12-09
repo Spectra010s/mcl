@@ -40,8 +40,7 @@ export default function SignUpPage() {
         email,
         password,
         options: {
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_REDIRECT_URL,
+          emailRedirectTo: process.env.NEXT_PUBLIC_REDIRECT_URL,
           data: {
             username: username,
             first_name: fullName.split(' ')[0],
