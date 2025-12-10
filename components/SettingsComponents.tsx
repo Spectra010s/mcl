@@ -108,10 +108,7 @@ export default function SettingsComponents({
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold text-foreground mb-2">Settings</h1>
-      <p className="text-muted-foreground mb-8">Manage your account and preferences</p>
-
+    <>
       {/* TAB NAVIGATION */}
       <div className="mt-4">
         <div className="flex border-b border-input overflow-x-auto">
@@ -327,6 +324,6 @@ export default function SettingsComponents({
           )}
         </div>
       </div>
-    </div>
+    </>
   )
 }
