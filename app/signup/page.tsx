@@ -144,7 +144,7 @@ export default function SignUpPage() {
                   <Input
                     id="fullName"
                     type="text"
-                    placeholder="Adetayo Ade"
+                    placeholder="e.g.Adetayo Ade"
                     required
                     value={fullName}
                     onChange={(e: InputEvent) => setFullName(e.target.value)}
@@ -156,7 +156,7 @@ export default function SignUpPage() {
                   <Input
                     id="username"
                     type="text"
-                    placeholder="Spectra010s"
+                    placeholder="e.g. Spectra010s"
                     required
                     value={username}
                     onChange={(e: InputEvent) => setUsername(e.target.value)}
