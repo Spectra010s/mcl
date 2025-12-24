@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { ResourceCarousel } from '@/components/ResourceCarousel'
 import { ChevronLeft } from 'lucide-react'
