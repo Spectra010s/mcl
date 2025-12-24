@@ -3,11 +3,11 @@ import { Button } from '@/components/ui/button'
 
 export default function HomePage() {
   return (
-    <main className="flex-1">
+  
       <div className="max-w-7xl mx-auto px-4 py-16 md:px-6">
         {/* Hero Section */}
         <section className="text-center mb-20">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+         <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Your Academic Resource Hub
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -57,6 +57,5 @@ export default function HomePage() {
           </div>
         </section>
       </div>
-    </main>
   )
 }
