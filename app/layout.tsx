@@ -33,6 +33,7 @@ export default function RootLayout({
           name="google-site-verification"
           content="Q24M4X9zoQ0B3kNG3W7ekoB2-3_2fJi8_vNH2W7dTNU"
         />
+        <meta name="msvalidate.01" content="E8636E77457C3ED17C9AADD9084197F3" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {' '}
