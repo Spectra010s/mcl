@@ -11,6 +11,7 @@ import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'sonner'
+import { useSearchParams } from 'next/navigation'
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>
 
@@ -22,7 +23,7 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailConfirmationSent, setEmailConfirmationSent] = useState(false)
-
+  const params = useSearchParams()
   const supabase = createClient()
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -36,6 +37,16 @@ export default function SignUpPage() {
     }
 
     try {
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('username', username)
+        .single()
+
+      if (existingUser) {
+        throw new Error('username_taken')
+      }
+
       const { error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -48,11 +59,48 @@ export default function SignUpPage() {
           },
         },
       })
-      if (authError) throw authError
+
+      if (authError) {
+        const errorMessage = authError.message.toLowerCase()
+        if (errorMessage.includes('already')) {
+          throw new Error('email_taken')
+        } else if (errorMessage.includes('email')) {
+          throw new Error('invalid_email')
+        }
+        throw authError
+      }
 
       setEmailConfirmationSent(true)
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'An error occured')
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'email_taken':
+            toast.error('Email Already Registered', {
+              description:
+                'An account with this email already exists. Please use a different email or log in.',
+            })
+            break
+          case 'username_taken':
+            toast.error('Username Taken', {
+              description:
+                'An account with this username already exists. Please choose a different one.',
+            })
+            break
+          case 'invalid_email':
+            toast.error('Invalid Email', {
+              description: 'Please enter a valid email address.',
+            })
+            break
+          default:
+            toast.error('Sign Up Failed', {
+              description: error.message || 'An error occurred during sign up. Please try again.',
+            })
+        }
+      } else {
+        toast.error('Sign Up Failed', {
+          description: 'An unexpected error occurred. Please try again.',
+        })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -60,24 +108,24 @@ export default function SignUpPage() {
 
   const handleGoogleSignup = async () => {
     try {
+      setIsLoading(true)
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: process.env.NEXT_PUBLIC_REDIRECT_URL,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
         },
       })
       if (error) throw error
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Google signup failed')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleGithubSignup = async () => {
     try {
+      setIsLoading(true)
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
@@ -87,6 +135,27 @@ export default function SignUpPage() {
       if (error) throw error
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'GitHub signup failed')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const errorMessage = params.get('error')
+  const oauthDesc = params.get('error_description')
+
+  if (errorMessage) {
+    if (errorMessage.includes('access_denied')) {
+      toast.info('Sign up Cancelled', {
+        description: `You cancelled the sign-up process.`,
+      })
+    } else if (errorMessage.includes('server_error')) {
+      toast.error('OAuth Error', {
+        description: `There was an issue signing up. Please try again.`,
+      })
+    } else {
+      toast.error(`Sign up Failed`, {
+        description: oauthDesc || `Could not sign-up. Please try again.`,
+      })
     }
   }
 
@@ -125,7 +194,16 @@ export default function SignUpPage() {
   return (
     <div className="flex min-h-svh w-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-6 md:p-10">
       <div className="w-full max-w-md">
-        <Image src="/logo.svg" alt="MCL" className="h-20 w-auto mx-auto mb-4 object-contain" />
+        <div className="relative h-20 w-full mb-4">
+          <Image
+            src="/logo.svg"
+            alt="MCL"
+            width={200}
+            height={80}
+            className="h-full w-auto mx-auto object-contain"
+            priority
+          />
+        </div>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2 text-center">
             <h1 className="text-3xl font-bold text-primary">My Campus Library</h1>
@@ -207,9 +285,9 @@ export default function SignUpPage() {
               </form>
               <div className="mt-6">
                 <div className="relative flex items-center my-6">
-                  <div className="flex-grow border-t border-primary/30"></div>
+                  <div className="grow border-t border-primary/30"></div>
                   <span className="mx-4 text-sm text-muted-foreground">Or continue with</span>
-                  <div className="flex-grow border-t border-primary/30"></div>
+                  <div className="grow border-t border-primary/30"></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Button

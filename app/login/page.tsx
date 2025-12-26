@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
+import { useSearchParams } from 'next/navigation'
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>
 
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const router = useRouter()
   const supabase = createClient()
+  const params = useSearchParams()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,11 +49,47 @@ export default function LoginPage() {
         password,
       })
 
-      if (error) throw new Error('An error occurred, please try again')
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('email')
+            .eq('email', loginEmail)
+            .single()
+
+          if (userError || !userData) {
+            throw new Error('incorrect')
+          } else if (error.message.includes('Email not confirmed')) {
+            throw new Error('inactive')
+          } else {
+            throw error
+          }
+        }
+      }
 
       router.push('/browse/faculties')
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'An error occurred')
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'incorrect':
+            toast.error('Invalid username/email or password')
+            break
+          case 'inactive':
+            toast.error('Account Not Verified', {
+              description:
+                'Please check your email for the verification link to activate your account.',
+            })
+            break
+          default:
+            toast.error('Login Failed', {
+              description: error.message || 'An error occurred, please try again',
+            })
+        }
+      } else {
+        toast.error('Login Failed', {
+          description: 'An unexpected error occurred. Please try again.',
+        })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -59,6 +97,7 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
+      setIsLoading(true)
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -68,11 +107,14 @@ export default function LoginPage() {
       if (error) throw new Error('An error occurred, please try again')
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Google login failed')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleGithubLogin = async () => {
     try {
+      setIsLoading(true)
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
@@ -82,13 +124,43 @@ export default function LoginPage() {
       if (error) throw new Error('An error occurred, please try again')
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'GitHub login failed')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const errorMessage = params.get('error')
+  const oauthDesc = params.get('error_description')
+
+  if (errorMessage) {
+    if (errorMessage.includes('access_denied')) {
+      toast.info('Sign In Cancelled', {
+        description: `You cancelled the sign in.`,
+      })
+    } else if (errorMessage.includes('server_error')) {
+      toast.error('OAuth Error', {
+        description: `There was an issue signing in. Please try again.`,
+      })
+    } else {
+      toast.error(`Sign In Failed`, {
+        description: oauthDesc || `Could not sign in. Please try again.`,
+      })
     }
   }
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-6 md:p-10">
       <div className="w-full max-w-md">
-        <Image src="/logo.svg" alt="MCL" className="h-20 w-auto mx-auto mb-4 object-contain" />
+        <div className="relative h-20 w-full mb-4">
+          <Image
+            src="/logo.svg"
+            alt="MCL"
+            width={200}
+            height={80}
+            className="h-full w-auto mx-auto object-contain"
+            priority
+          />
+        </div>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2 text-center">
             <h1 className="text-3xl font-bold text-primary">My Campus Library</h1>
@@ -135,9 +207,9 @@ export default function LoginPage() {
 
               <div className="mt-6">
                 <div className="relative flex items-center my-6">
-                  <div className="flex-grow border-t border-primary/30"></div>
+                  <div className="grow border-t border-primary/30"></div>
                   <span className="mx-4 text-sm text-muted-foreground">Or continue with</span>
-                  <div className="flex-grow border-t border-primary/30"></div>
+                  <div className="grow border-t border-primary/30"></div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
