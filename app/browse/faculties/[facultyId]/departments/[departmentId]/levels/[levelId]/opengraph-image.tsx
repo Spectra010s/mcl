@@ -27,33 +27,16 @@ export default async function Image(props: ImageProps) {
       .eq('id', departmentId)
       .eq('faculty_id', facultyId)
       .single(),
-    supabase
-      .from('academic_levels')
-      .select('level_number, courses(count)')
-      .eq('id', levelId)
-      .eq('department_id', departmentId)
-      .single(),
+    supabase.from('academic_levels').select('level_number').eq('id', levelId).single(),
   ])
 
   const faculty = facultyResult.data
   const dept = deptResult.data
   const level = levelResult.data
-  const levelNumber = level?.level_number || 'Level'
+
+  const levelName = level?.level_number ? `Level ${level.level_number}` : 'Level'
   const departmentName = dept?.full_name || 'Department'
   const facultyName = faculty?.full_name || 'Faculty'
-  const courseCount = level?.courses?.[0]?.count || 0
-
-  // Fetch logo
-  let logoSvg = ''
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-    const logoResponse = await fetch(`${baseUrl}/logo.svg`)
-    if (logoResponse.ok) {
-      logoSvg = await logoResponse.text()
-    }
-  } catch (error) {
-    // Fallback if logo fetch fails - will show white box instead
-  }
 
   return new ImageResponse(
     (
@@ -76,18 +59,23 @@ export default async function Image(props: ImageProps) {
             marginBottom: '60px',
           }}
         >
-          {logoSvg && (
-            <img
-              src={`data:image/svg+xml,${encodeURIComponent(logoSvg)}`}
-              alt="Logo"
-              width="48"
-              height="48"
-              style={{
-                marginRight: '16px',
-                borderRadius: '50%',
-              }}
-            />
-          )}
+          <div
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              backgroundColor: '#0256a5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: '16px',
+              color: '#ffffff',
+              fontSize: '20px',
+              fontWeight: '700',
+            }}
+          >
+            MCL
+          </div>
           <div
             style={{
               fontSize: '24px',
@@ -127,38 +115,22 @@ export default async function Image(props: ImageProps) {
         >
           <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
+              fontSize: '18px',
+              color: '#0256a5',
+              backgroundColor: '#e6f2ff',
+              padding: '8px 16px',
+              borderRadius: '6px',
               marginBottom: '24px',
+              fontWeight: '500',
+              width: 'fit-content',
             }}
           >
-            <div
-              style={{
-                fontSize: '18px',
-                color: '#0256a5',
-                backgroundColor: '#e6f2ff',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                marginRight: '16px',
-                fontWeight: '500',
-              }}
-            >
-              Level {levelNumber}
-            </div>
-            <div
-              style={{
-                fontSize: '18px',
-                color: '#94a3b8',
-                fontWeight: '500',
-              }}
-            >
-              {courseCount} {courseCount === 1 ? 'course' : 'courses'}
-            </div>
+            Academic Level
           </div>
 
           <h1
             style={{
-              fontSize: '64px',
+              fontSize: '72px',
               fontWeight: '700',
               color: '#0f172a',
               margin: '0 0 32px 0',
@@ -166,7 +138,7 @@ export default async function Image(props: ImageProps) {
               letterSpacing: '-0.02em',
             }}
           >
-            {levelNumber} Level Courses
+            {levelName}
           </h1>
 
           <p
@@ -175,10 +147,9 @@ export default async function Image(props: ImageProps) {
               color: '#475569',
               lineHeight: '1.6',
               margin: '0',
-              maxWidth: '900px',
             }}
           >
-            Explore all courses and resources for {levelNumber} Level in {departmentName}
+            Browse courses for this academic level
           </p>
         </div>
 
@@ -192,17 +163,8 @@ export default async function Image(props: ImageProps) {
             marginTop: 'auto',
           }}
         >
-          <div
-            style={{
-              fontSize: '20px',
-              color: '#94a3b8',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <span style={{ marginRight: '8px' }}>📚</span>
-            <span>Browse course materials and resources</span>
-          </div>
+          <span style={{ fontSize: '20px', marginRight: '8px' }}>📚</span>
+          <span style={{ fontSize: '20px', color: '#94a3b8' }}>Explore courses and resources</span>
         </div>
       </div>
     ),

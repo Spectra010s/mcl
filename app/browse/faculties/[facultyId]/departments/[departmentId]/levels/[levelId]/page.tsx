@@ -55,26 +55,6 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   return {
     title,
     description,
-    openGraph: {
-      title,
-      description,
-      images: [
-        {
-          url: `/browse/faculties/${facultyId}/departments/${departmentId}/levels/${levelId}/opengraph-image`,
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [
-        `/browse/faculties/${facultyId}/departments/${departmentId}/levels/${levelId}/opengraph-image`,
-      ],
-    },
   }
 }
 

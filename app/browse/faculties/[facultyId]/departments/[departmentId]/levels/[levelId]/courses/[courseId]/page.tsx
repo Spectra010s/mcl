@@ -17,7 +17,7 @@ async function getCourseDetailPageData(
 ) {
   const supabase = await createClient()
 
-  const [deptResult, levelResult, courseResult] = await Promise.all([
+  const [deptResult, levelResult, courseResult, assessmentResult] = await Promise.all([
     supabase
       .from('departments')
       .select('full_name')
@@ -50,12 +50,23 @@ async function getCourseDetailPageData(
       )
       .eq('id', courseId)
       .single(),
+    supabase
+      .from('assessments')
+      .select('id, title, description, time_limit_minutes, passing_score')
+      .eq('course_id', courseId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false }),
   ])
 
   const error = deptResult.error || levelResult.error || courseResult.error
   if (error) throw error
 
-  return { dept: deptResult.data, level: levelResult.data, course: courseResult.data }
+  return {
+    dept: deptResult.data,
+    level: levelResult.data,
+    course: courseResult.data,
+    assessments: assessmentResult.data || [],
+  }
 }
 
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
@@ -76,26 +87,6 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   return {
     title: `${course?.course_title} | ${level?.level_number} lvl - My Campus Library`,
     description,
-    openGraph: {
-      title: `${course?.course_title} | ${level?.level_number} lvl - My Campus Library`,
-      description,
-      images: [
-        {
-          url: `/browse/faculties/${facultyId}/departments/${departmentId}/levels/${levelId}/courses/${courseId}/opengraph-image`,
-          width: 1200,
-          height: 630,
-          alt: `${course?.course_title} - My Campus Library`,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${course?.course_title} | ${level?.level_number} lvl - My Campus Library`,
-      description,
-      images: [
-        `/browse/faculties/${facultyId}/departments/${departmentId}/levels/${levelId}/courses/${courseId}/opengraph-image`,
-      ],
-    },
   }
 }
 
@@ -103,7 +94,12 @@ export default async function CourseDetailPage(props: PageProps) {
   const params = await props.params
   const { facultyId, departmentId, levelId, courseId } = params
 
-  const { course } = await getCourseDetailPageData(facultyId, departmentId, levelId, courseId)
+  const { course, assessments } = await getCourseDetailPageData(
+    facultyId,
+    departmentId,
+    levelId,
+    courseId,
+  )
 
   const approvedResources = course?.resources?.filter(r => r.is_approved) || []
 
@@ -156,9 +152,22 @@ export default async function CourseDetailPage(props: PageProps) {
           {course?.course_code}: {course?.course_title}
         </h1>
         <p className="text-lg text-muted-foreground mb-6 max-w-2xl">{course?.description}</p>
-        <p className="text-sm text-muted-foreground">
-          {approvedResources.length} resource{approvedResources.length !== 1 ? 's' : ''} available
-        </p>
+
+        <div className="flex flex-wrap gap-3 items-center mb-6">
+          <p className="text-sm text-muted-foreground">
+            {approvedResources.length} resource{approvedResources.length !== 1 ? 's' : ''} available
+          </p>
+          {assessments.length > 0 && (
+            <>
+              <span className="text-muted-foreground">•</span>
+              <Link href={`/assessment/${assessments[0].id}`}>
+                <Button variant="default" size="sm">
+                  Test Your Knowledge
+                </Button>
+              </Link>
+            </>
+          )}
+        </div>
       </div>
 
       {sortedTypes.length > 0 ? (
