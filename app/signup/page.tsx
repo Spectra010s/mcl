@@ -11,7 +11,6 @@ import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { useSearchParams } from 'next/navigation'
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>
 
@@ -23,7 +22,6 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailConfirmationSent, setEmailConfirmationSent] = useState(false)
-  const params = useSearchParams()
   const supabase = createClient()
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -137,25 +135,6 @@ export default function SignUpPage() {
       toast.error(error instanceof Error ? error.message : 'GitHub signup failed')
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  const errorMessage = params.get('error')
-  const oauthDesc = params.get('error_description')
-
-  if (errorMessage) {
-    if (errorMessage.includes('access_denied')) {
-      toast.info('Sign up Cancelled', {
-        description: `You cancelled the sign-up process.`,
-      })
-    } else if (errorMessage.includes('server_error')) {
-      toast.error('OAuth Error', {
-        description: `There was an issue signing up. Please try again.`,
-      })
-    } else {
-      toast.error(`Sign up Failed`, {
-        description: oauthDesc || `Could not sign-up. Please try again.`,
-      })
     }
   }
 

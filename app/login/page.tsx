@@ -11,7 +11,6 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { useSearchParams } from 'next/navigation'
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>
 
@@ -21,7 +20,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const router = useRouter()
   const supabase = createClient()
-  const params = useSearchParams()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -126,25 +124,6 @@ export default function LoginPage() {
       toast.error(error instanceof Error ? error.message : 'GitHub login failed')
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  const errorMessage = params.get('error')
-  const oauthDesc = params.get('error_description')
-
-  if (errorMessage) {
-    if (errorMessage.includes('access_denied')) {
-      toast.info('Sign In Cancelled', {
-        description: `You cancelled the sign in.`,
-      })
-    } else if (errorMessage.includes('server_error')) {
-      toast.error('OAuth Error', {
-        description: `There was an issue signing in. Please try again.`,
-      })
-    } else {
-      toast.error(`Sign In Failed`, {
-        description: oauthDesc || `Could not sign in. Please try again.`,
-      })
     }
   }
 
