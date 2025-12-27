@@ -5,9 +5,10 @@
 This document summarizes all changes made to My Campus Library (MCL) since the initial commit.
 
 <!-- ## Current Version: v1.0.0 -->
+
 **Removing Version in next Changelog update and switching to using dates for changelog**
 
-<!--  MCL follows [Semantic Versioning](https://semver.org/) (SemVer) for version management. 
+<!--  MCL follows [Semantic Versioning](https://semver.org/) (SemVer) for version management.
 
 ## Version Format
 
@@ -16,10 +17,11 @@ MAJOR.MINOR.PATCH
 - **MAJOR**: Breaking changes, major feature additions
 - **MINOR**: New features, backward compatible
 - **PATCH**: Bug fixes, backward compatible
---> 
-
+-->
 
 ## Version History
+
+> on 2025-12-26, deleted my account on mcl, this cause the resource i uploaded to delete also, then i saw i referenced delete on cascade
 
 ### 1.0.0 - Major Release
 
