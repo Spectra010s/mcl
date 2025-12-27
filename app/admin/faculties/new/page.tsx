@@ -23,12 +23,13 @@ export default function NewFacultyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.fullName || !formData.shortName) {
+    setLoading(true)
+
+    if (!formData.fullName || !formData.shortName || !formData.description) {
       toast.error('Please fill in all required fields')
       return
     }
 
-    setLoading(true)
     try {
       const response = await fetch('/api/admin/faculties', {
         method: 'POST',
@@ -36,10 +37,18 @@ export default function NewFacultyPage() {
         body: JSON.stringify(formData),
       })
 
-      if (!response.ok) throw new Error('Failed to create faculty')
+      if (response.ok) {
+        toast.success('Success', {
+          description: 'Faculty created successfully',
+        })
 
-      toast.success('Faculty created successfully')
-      router.push('/admin/faculties')
+        router.push('/admin/faculties')
+      } else {
+        const error = await response.json()
+        toast.error('Error', {
+          description: error.error || 'Failed to create department',
+        })
+      }
     } catch (error) {
       console.error(error)
       toast.error('Failed to create faculty')
@@ -49,7 +58,7 @@ export default function NewFacultyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <header className="border-b border-border bg-card">
         <div className="px-6 py-4">
           <Link href="/admin/faculties">

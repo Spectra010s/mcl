@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -78,7 +77,7 @@ export async function POST(request: Request) {
       .insert({
         short_name: shortName,
         full_name: fullName,
-        description: description || null,
+        description: description,
       })
       .select()
       .single()

@@ -60,25 +60,22 @@ export default function AdminFacultiesPage() {
         method: 'DELETE',
       })
 
-       if (response.ok) {
-        toast.success("Success", {
+      if (response.ok) {
+        toast.success('Success', {
           description: `${facultyToDelete.full_name} deleted successfully`,
         })
-        
-       } else {
-              const error = await response.json()
-              toast.error("Error", {
-                description: error.error || "Failed to delete faculty",
-              })
-       }
+      } else {
+        const error = await response.json()
+        toast.error('Error', {
+          description: error.error || 'Failed to delete faculty',
+        })
+      }
 
-       
       setDeleteDialogOpen(false)
       setFacultyToDelete(null)
       await fetchFaculties()
-
     } catch (error) {
-      console.error("Error deleting department:", error)
+      console.error('Error deleting department:', error)
       toast.error('Failed to delete faculty')
     }
   }
@@ -124,7 +121,7 @@ export default function AdminFacultiesPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => {
                       setFacultyToDelete(faculty)
                       setDeleteDialogOpen(true)
