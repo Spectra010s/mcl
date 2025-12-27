@@ -159,7 +159,7 @@ export default function AdminStats() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full" variant="outline">
-              <Link href="/admin/content">Manage Content</Link>
+              <Link href="/admin/faculties">Manage Content</Link>
             </Button>
           </CardContent>
         </Card>
