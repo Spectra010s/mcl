@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
-type FacultyType = {
+interface Faculty {
   id: number
   full_name: string
   short_name: string
@@ -28,10 +28,10 @@ type FacultyType = {
 }
 
 export default function AdminFacultiesPage() {
-  const [faculties, setFaculties] = useState<FacultyType[]>([])
+  const [faculties, setFaculties] = useState<Faculty[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [facultyToDelete, setFacultyToDelete] = useState<FacultyType | null>(null)
+  const [facultyToDelete, setFacultyToDelete] = useState<Faculty | null>(null)
 
   const fetchFaculties = async () => {
     setLoading(true)
@@ -60,24 +60,35 @@ export default function AdminFacultiesPage() {
         method: 'DELETE',
       })
 
-      if (!response.ok) throw new Error('Failed to delete faculty')
+       if (response.ok) {
+        toast.success("Success", {
+          description: `${facultyToDelete.full_name} deleted successfully`,
+        })
+        
+       } else {
+              const error = await response.json()
+              toast.error("Error", {
+                description: error.error || "Failed to delete faculty",
+              })
+       }
 
-      toast.success('Faculty deleted successfully')
+       
       setDeleteDialogOpen(false)
       setFacultyToDelete(null)
       await fetchFaculties()
+
     } catch (error) {
-      console.error(error)
+      console.error("Error deleting department:", error)
       toast.error('Failed to delete faculty')
     }
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+    return <div className="flex items-center justify-center min-h-screen">Loading Faculties...</div>
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <header className="border-b border-border bg-card">
         <div className="px-6 py-4">
           <Link href="/admin">
@@ -113,7 +124,7 @@ export default function AdminFacultiesPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-destructive"
+                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => {
                       setFacultyToDelete(faculty)
                       setDeleteDialogOpen(true)
@@ -124,9 +135,9 @@ export default function AdminFacultiesPage() {
                 </CardTitle>
                 <CardDescription>{faculty.short_name}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                  {faculty.description || 'No description'}
+              <CardContent className="flex-1">
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-3 justify-between">
+                  {faculty.description}
                 </p>
                 <Button asChild variant="outline" className="w-full bg-transparent">
                   <Link href={`/admin/faculties/${faculty.id}/departments`}>
