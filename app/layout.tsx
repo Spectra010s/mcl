@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { LayoutContent } from '@/components/LayoutContent'
@@ -15,11 +15,37 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
+const DEFAULT_TITLE = "My Campus Library"
+const DEFAULT_DESC = 'Empowering knowledge for every student — your library for study materials, past questions, and academic resources for effective learning.'
+
 export const metadata: Metadata = {
-  title: 'My Campus Library',
-  description:
-    'Empowering knowledge for every student — your library for study materials, past questions, and academic resources for effective learning.',
+  title: DEFAULT_TITLE,
+  description: DEFAULT_DESC,
+  openGraph: {
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESC,
+    siteName: DEFAULT_TITLE,
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESC,
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: DEFAULT_TITLE,
+    // startUpImage: [],
+  },
+  formatDetection: {
+    telephone: false,
+  },
 }
+
+export const viewport: Viewport = {
+  themeColor: '#182b5c',
+};
 
 export default function RootLayout({
   children,
