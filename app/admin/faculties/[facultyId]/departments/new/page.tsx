@@ -54,9 +54,6 @@ export default function NewDepartmentPage() {
       }
     } catch (error) {
       console.error('Error creating department:', error)
-      toast.error('Error', {
-        description: 'Failed to create department',
-      })
     } finally {
       setLoading(false)
     }
