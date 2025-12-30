@@ -4,6 +4,7 @@ import './globals.css'
 import { LayoutContent } from '@/components/LayoutContent'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from '@/components/ui/sonner'
+import { SerwistProvider } from './lib/client'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -15,22 +16,35 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
+const APP_NAME = 'My Campus Library'
 const DEFAULT_TITLE = 'My Campus Library'
 const DEFAULT_DESC =
   'Empowering knowledge for every student — your library for study materials, past questions, and academic resources for effective learning.'
 
+const TITLE_TEMPLATE = '%s - My Campus Library'
+
 export const metadata: Metadata = {
-  title: DEFAULT_TITLE,
+  applicationName: APP_NAME,
+  title: {
+    default: DEFAULT_TITLE,
+    template: TITLE_TEMPLATE,
+  },
   description: DEFAULT_DESC,
   openGraph: {
-    title: DEFAULT_TITLE,
+    title: {
+      default: DEFAULT_TITLE,
+      template: TITLE_TEMPLATE,
+    },
     description: DEFAULT_DESC,
     siteName: DEFAULT_TITLE,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: DEFAULT_TITLE,
+    title: {
+      default: DEFAULT_TITLE,
+      template: TITLE_TEMPLATE,
+    },
     description: DEFAULT_DESC,
   },
   appleWebApp: {
@@ -64,7 +78,9 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {' '}
-        <LayoutContent>{children}</LayoutContent>
+        <SerwistProvider swUrl="/serwist/sw.js">
+          <LayoutContent>{children}</LayoutContent>
+        </SerwistProvider>
         <Toaster position="top-center" theme="light" />
         <Analytics />
       </body>
