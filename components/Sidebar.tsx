@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { BookOpen, Plus, Settings, Github, FileText, Folder } from 'lucide-react'
+import { BookOpen, Plus, Settings, Github, FileText, Folder, HelpCircle } from 'lucide-react'
 import { User } from '@supabase/supabase-js'
 
 interface SidebarProps {
@@ -150,9 +150,17 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             <div className="bg-sidebar-border border-t-2"></div>
             <div className=" mt-3 space-y-2 pl-4">
               <Link
-                href="https://github.com/mycampuslib/mcl"
+                href="/help"
+                className="text-sm text-sidebar-foreground/70 hover:text-sidebar-primary flex items-center gap-2"
+                onClick={onMobileClose}
+              >
+                <HelpCircle className="w-4 h-4" />
+                Help & Support
+              </Link>
+              <Link
+                href="https://github.com/Spectra010s/mcl"
                 target="_blank"
-                className="text-sm text-sidebar-foreground/70 hover:text-sidebar-primary block flex items-center gap-2"
+                className="text-sm text-sidebar-foreground/70 hover:text-sidebar-primary flex items-center gap-2"
                 onClick={onMobileClose}
               >
                 <Github className="w-4 h-4" />
@@ -160,7 +168,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
               </Link>
               <Link
                 href="/docs"
-                className="text-sm text-sidebar-foreground/70 hover:text-sidebar-primary block flex items-center gap-2"
+                className="text-sm text-sidebar-foreground/70 hover:text-sidebar-primary flex items-center gap-2"
                 onClick={onMobileClose}
               >
                 <FileText className="w-4 h-4" />
