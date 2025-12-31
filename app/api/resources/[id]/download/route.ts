@@ -57,7 +57,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const filename = `${resource.title}`
       .replace(/\s+/g, '-')
       .replace(/[^a-zA-Z0-9-]/g, '')
-      .concat(`-MCL.${extension}`)
+      .concat(`MCL.${extension}`)
 
     return new NextResponse(fileResponse.body, {
       status: 200,
