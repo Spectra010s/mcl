@@ -39,9 +39,9 @@ interface Resource {
     keyword: string
   }>
 
-  uploader: {
+  uploader?: {
     username: string | null
-  }
+  } | null
 }
 
 export default function ResourcePage() {
@@ -172,7 +172,7 @@ export default function ResourcePage() {
   const course = resource.course_id
   const level = course?.academic_level_id
   const dept = level?.department_id
-  const uploaderUsername = resource.uploader.username || 'Anonymous'
+  const uploaderUsername = resource.uploader?.username || 'MCL Team'
 
   return (
     <>

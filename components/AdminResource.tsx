@@ -36,10 +36,10 @@ interface PendingResource {
   }
   file_size_bytes: number
   upload_date: string
-  users: {
+  users?: {
     email: string
     username: string
-  }
+  } | null
 }
 
 const rejectionReasons = [
@@ -150,7 +150,7 @@ export default function AdminResource({ initialResources }: AdminResourceProps) 
                     <div className="flex-1">
                       <CardTitle className="text-xl">{resource.title}</CardTitle>
                       <CardDescription>
-                        Uploaded by {resource.users?.username} ({resource.users?.email})
+                        Uploaded by {resource.users?.username || 'Unknown'} ({resource.users?.email || 'Deleted user'})
                       </CardDescription>
                     </div>
                     <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
@@ -185,7 +185,7 @@ export default function AdminResource({ initialResources }: AdminResourceProps) 
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-muted-foreground">Status</p>
-                      <p className="text-sm text-foreground text-yellow-600 font-semibold">
+                      <p className="text-sm text-foreground font-semibold">
                         Pending
                       </p>
                     </div>
