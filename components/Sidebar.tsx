@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { BookOpen, Plus, Settings, Github, FileText, Folder, HelpCircle } from 'lucide-react'
@@ -16,6 +17,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+  const pathname = usePathname()
   const sidebarRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -79,12 +81,12 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
         {!loading && !user && (
           <div className="p-4 border-b border-sidebar-border">
             <div className="space-y-2">
-              <Link href="/login" className="block" onClick={onMobileClose}>
+              <Link href={`/login?returnTo=${encodeURIComponent(pathname)}`} className="block" onClick={onMobileClose}>
                 <Button variant="outline" size="sm" className="w-full justify-start bg-transparent">
                   Log In
                 </Button>
               </Link>
-              <Link href="/signup" className="block" onClick={onMobileClose}>
+              <Link href={`/signup?returnTo=${encodeURIComponent(pathname)}`} className="block" onClick={onMobileClose}>
                 <Button
                   size="sm"
                   className="w-full justify-start bg-sidebar-primary hover:bg-sidebar-primary/90"

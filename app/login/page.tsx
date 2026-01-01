@@ -7,18 +7,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/passwordInput'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>
 
-export default function LoginPage() {
+import { Suspense } from 'react'
+
+function LoginContent() {
   const [emailOrUsername, setEmailOrUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnTo = searchParams.get('returnTo') || '/browse/faculties'
   const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -65,7 +69,7 @@ export default function LoginPage() {
         }
       }
 
-      router.push('/browse/faculties')
+      router.push(returnTo)
     } catch (error: unknown) {
       if (error instanceof Error) {
         switch (error.message) {
@@ -96,10 +100,11 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true)
+      const callbackUrl = `${process.env.NEXT_PUBLIC_REDIRECT_URL}?next=${encodeURIComponent(returnTo)}`
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: process.env.NEXT_PUBLIC_REDIRECT_URL,
+          redirectTo: callbackUrl,
         },
       })
       if (error) throw new Error('An error occurred, please try again')
@@ -113,10 +118,11 @@ export default function LoginPage() {
   const handleGithubLogin = async () => {
     try {
       setIsLoading(true)
+      const callbackUrl = `${process.env.NEXT_PUBLIC_REDIRECT_URL}?next=${encodeURIComponent(returnTo)}`
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: process.env.NEXT_PUBLIC_REDIRECT_URL,
+          redirectTo: callbackUrl,
         },
       })
       if (error) throw new Error('An error occurred, please try again')
@@ -224,7 +230,7 @@ export default function LoginPage() {
               </div>
               <div className="mt-4 text-center text-sm">
                 Don&apos;t have an account?{' '}
-                <Link href="/signup" className="text-primary font-semibold hover:underline">
+                <Link href={`/signup${returnTo !== '/browse/faculties' ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`} className="text-primary font-semibold hover:underline">
                   Create one
                 </Link>
               </div>
@@ -232,6 +238,16 @@ export default function LoginPage() {
           </Card>
         </div>
       </div>
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-6 md:p-10">
+      <Suspense fallback={<div>Loading...</div>}>
+        <LoginContent />
+      </Suspense>
     </div>
   )
 }

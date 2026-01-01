@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/passwordInput'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 import Image from 'next/image'
@@ -14,7 +16,8 @@ import { toast } from 'sonner'
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>
 
-export default function SignUpPage() {
+
+function SignUpContent() {
   const [fullName, setFullName] = useState('')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -22,6 +25,8 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailConfirmationSent, setEmailConfirmationSent] = useState(false)
+  const searchParams = useSearchParams()
+  const returnTo = searchParams.get('returnTo') || '/browse/faculties'
   const supabase = createClient()
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -107,10 +112,11 @@ export default function SignUpPage() {
   const handleGoogleSignup = async () => {
     try {
       setIsLoading(true)
+      const callbackUrl = `${process.env.NEXT_PUBLIC_REDIRECT_URL}?next=${encodeURIComponent(returnTo)}`
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: process.env.NEXT_PUBLIC_REDIRECT_URL,
+          redirectTo: callbackUrl,
         },
       })
       if (error) throw error
@@ -124,10 +130,11 @@ export default function SignUpPage() {
   const handleGithubSignup = async () => {
     try {
       setIsLoading(true)
+      const callbackUrl = `${process.env.NEXT_PUBLIC_REDIRECT_URL}?next=${encodeURIComponent(returnTo)}`
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: process.env.NEXT_PUBLIC_REDIRECT_URL,
+          redirectTo: callbackUrl,
         },
       })
       if (error) throw error
@@ -158,7 +165,7 @@ export default function SignUpPage() {
               <p className="text-sm text-muted-foreground">
                 Once verified, you can start browsing and contributing resources!
               </p>
-              <Link href="/browse/faculties" className="block">
+              <Link href={returnTo} className="block">
                 <Button className="w-full bg-primary hover:bg-secondary">
                   Continue to Library
                 </Button>
@@ -300,7 +307,7 @@ export default function SignUpPage() {
               </div>
               <div className="mt-4 text-center text-sm">
                 Already have an account?{' '}
-                <Link href="/login" className="text-primary font-semibold hover:underline">
+                <Link href={`/login${returnTo !== '/browse/faculties' ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`} className="text-primary font-semibold hover:underline">
                   Sign in
                 </Link>
               </div>
@@ -308,6 +315,16 @@ export default function SignUpPage() {
           </Card>
         </div>
       </div>
+    </div>
+  )
+}
+
+export default function SignUpPage() {
+  return (
+    <div className="flex min-h-svh w-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-6 md:p-10">
+      <Suspense fallback={<div>Loading...</div>}>
+        <SignUpContent />
+      </Suspense>
     </div>
   )
 }

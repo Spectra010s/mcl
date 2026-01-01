@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Menu, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import { User } from '@supabase/supabase-js'
@@ -20,6 +20,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const [loading, setLoading] = useState(true)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = createClient()
 
   useEffect(() => {
@@ -87,12 +88,12 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         <div className="hidden md:flex items-center gap-4">
           {!loading && !user && (
             <>
-              <Link href="/login">
+              <Link href={`/login?returnTo=${encodeURIComponent(pathname)}`}>
                 <Button variant="ghost" size="sm">
                   Log In
                 </Button>
               </Link>
-              <Link href="/signup">
+              <Link href={`/signup?returnTo=${encodeURIComponent(pathname)}`}>
                 <Button size="sm" className="bg-primary hover:bg-primary/90">
                   Sign Up
                 </Button>
