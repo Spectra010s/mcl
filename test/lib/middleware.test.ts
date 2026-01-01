@@ -42,7 +42,7 @@ describe('updateSession', () => {
     expect(res.cookies).toBeDefined()
   })
 
-  it('redirects to /login if unauthenticated and on /upload', async () => {
+  it('redirects to /login with returnTo if unauthenticated and on /upload', async () => {
     const { createServerClient } = await import('@supabase/ssr')
     ;(createServerClient as Mock).mockReturnValueOnce({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
@@ -50,7 +50,7 @@ describe('updateSession', () => {
 
     const res = await updateSession(mockRequest as NextRequest)
     expect(res.status).toBe(307)
-    expect(res.headers.get('location')).toBe('https://tayo.com/login')
+    expect(res.headers.get('location')).toBe('https://tayo.com/login?returnTo=%2Fupload')
   })
 
   it('does not redirect if unauthenticated but not on /upload', async () => {

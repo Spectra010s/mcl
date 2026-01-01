@@ -31,6 +31,7 @@ export async function updateSession(request: NextRequest) {
   if (!user && request.nextUrl.pathname === '/upload') {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    url.searchParams.set('returnTo', request.nextUrl.pathname)
     return NextResponse.redirect(url)
   }
 
