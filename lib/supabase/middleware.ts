@@ -28,14 +28,22 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // guard against upload page for non authenticated users
-  if (!user && request.nextUrl.pathname === '/upload') {
+  // will be combining yhe upload and cbts together to make it DRY (Dont Repeat Yourself)
+
+  const { pathname, search } = request.nextUrl
+  const currentPath = pathname + search // add check for query params
+
+  // Group protected routes
+  const isProtectedRoute = pathname === '/upload' || pathname.startsWith('/cbts')
+
+  if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    url.searchParams.set('returnTo', request.nextUrl.pathname)
+    url.searchParams.set('returnTo', currentPath) // Includes query params if they exist
     return NextResponse.redirect(url)
   }
 
-  if (request.nextUrl.pathname === '/admin') {
+  if (pathname === '/admin') {
     const forbiddenReponse = new NextResponse(
       `
         <!DOCTYPE html>
