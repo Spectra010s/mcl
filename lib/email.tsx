@@ -2,6 +2,10 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+const fromEmail: string = process.env.EMAIL_FROM_ADDRESS
+
+const replyToEmail: string = process.env.SUPPORT_EMAIL_ADDRESS
+
 export async function sendRejectionEmail(
   userEmail: string,
   username: string,
@@ -10,9 +14,9 @@ export async function sendRejectionEmail(
 ) {
   try {
     const { data, error } = await resend.emails.send({
-      from: 'My Campus Library <mcl@biuld.app>',
+      from: `My Campus Library <${fromEmail}>`,
       to: userEmail,
-      replyTo: 'spectra010s@gmail.com',
+      replyTo: replyToEmail,
       subject: `Your file upload was not approved - "${resourceTitle}"`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
