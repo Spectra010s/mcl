@@ -230,7 +230,10 @@ function LoginContent() {
               </div>
               <div className="mt-4 text-center text-sm">
                 Don&apos;t have an account?{' '}
-                <Link href={`/signup${returnTo !== '/browse/faculties' ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`} className="text-primary font-semibold hover:underline">
+                <Link
+                  href={`/signup${returnTo !== '/browse/faculties' ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`}
+                  className="text-primary font-semibold hover:underline"
+                >
                   Create one
                 </Link>
               </div>

@@ -17,7 +17,7 @@ async function getCourseDetailPageData(
 ) {
   const supabase = await createClient()
 
-  const [deptResult, levelResult, courseResult, assessmentResult] = await Promise.all([
+  const [deptResult, levelResult, courseResult, cbtResult] = await Promise.all([
     supabase
       .from('departments')
       .select('full_name')
@@ -51,8 +51,8 @@ async function getCourseDetailPageData(
       .eq('id', courseId)
       .single(),
     supabase
-      .from('assessments')
-      .select('id, title, description, time_limit_minutes, passing_score')
+      .from('cbts')
+      .select('id')
       .eq('course_id', courseId)
       .eq('is_active', true)
       .order('created_at', { ascending: false }),
@@ -65,7 +65,7 @@ async function getCourseDetailPageData(
     dept: deptResult.data,
     level: levelResult.data,
     course: courseResult.data,
-    assessments: assessmentResult.data || [],
+    cbts: cbtResult.data || [],
   }
 }
 
@@ -94,12 +94,7 @@ export default async function CourseDetailPage(props: PageProps) {
   const params = await props.params
   const { facultyId, departmentId, levelId, courseId } = params
 
-  const { course, assessments } = await getCourseDetailPageData(
-    facultyId,
-    departmentId,
-    levelId,
-    courseId,
-  )
+  const { course, cbts } = await getCourseDetailPageData(facultyId, departmentId, levelId, courseId)
 
   const approvedResources = course?.resources?.filter(r => r.is_approved) || []
 
@@ -157,16 +152,12 @@ export default async function CourseDetailPage(props: PageProps) {
           <p className="text-sm text-muted-foreground">
             {approvedResources.length} resource{approvedResources.length !== 1 ? 's' : ''} available
           </p>
-          {assessments.length > 0 && (
-            <>
-              <span className="text-muted-foreground">•</span>
-              <Link href={`/assessment/${assessments[0].id}`}>
-                <Button variant="default" size="sm">
-                  Test Your Knowledge
-                </Button>
-              </Link>
-            </>
-          )}
+          <span className="text-muted-foreground">•</span>
+          <Link href={`/cbt/${courseId}`}>
+            <Button variant="default" size="sm">
+              Test Your Knowledge
+            </Button>
+          </Link>
         </div>
       </div>
 

@@ -16,7 +16,6 @@ import { toast } from 'sonner'
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>
 
-
 function SignUpContent() {
   const [fullName, setFullName] = useState('')
   const [username, setUsername] = useState('')
@@ -307,7 +306,10 @@ function SignUpContent() {
               </div>
               <div className="mt-4 text-center text-sm">
                 Already have an account?{' '}
-                <Link href={`/login${returnTo !== '/browse/faculties' ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`} className="text-primary font-semibold hover:underline">
+                <Link
+                  href={`/login${returnTo !== '/browse/faculties' ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`}
+                  className="text-primary font-semibold hover:underline"
+                >
                   Sign in
                 </Link>
               </div>

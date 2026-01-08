@@ -46,6 +46,7 @@ export const metadata: Metadata = {
       template: TITLE_TEMPLATE,
     },
     description: DEFAULT_DESC,
+    creator: '@mcl',
   },
   appleWebApp: {
     capable: true,
