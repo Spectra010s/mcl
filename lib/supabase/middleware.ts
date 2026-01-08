@@ -43,7 +43,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (pathname === '/admin') {
+  if (pathname.startsWith('/admin')) {
     const forbiddenReponse = new NextResponse(
       `
         <!DOCTYPE html>
