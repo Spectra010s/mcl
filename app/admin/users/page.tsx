@@ -132,7 +132,11 @@ export default function AdminUsersPage() {
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">
                           <div>
-                            <p className="font-semibold">{user.full_name || 'Unavailable'}</p>
+                            <p className="font-semibold">
+                              {user.first_name
+                                ? `${user.first_name} ${user.last_name}`
+                                : 'Unavailable'}
+                            </p>
                             <p className="text-sm text-muted-foreground">@{user.username}</p>
                           </div>
                         </TableCell>
