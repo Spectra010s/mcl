@@ -1,7 +1,6 @@
- Communication and Information Engineering 
+Communication and Information Engineering
 CIE.F
 The faculty provides broad academic and professional training in communication, information, and related engineering disciplines, supporting innovation, research, and the development of technologies for data, media, and communication systems.
-
 
 Information and Communication Engineering
 The department focuses on the study and application of information processing, communication systems, networking, signal transmission, and modern communication technologies used in engineering and industry.
@@ -44,6 +43,5 @@ Continuation of physics covering waves, electricity, magnetism, and basic modern
 
 PHY 107 – Experimental Physics I
 Practical physics experiments focused on measurement techniques, data analysis, and verification of physical laws.
-
 
 The department focuses on the scientific principles and technological processes involved in food production, preservation, processing, quality control, and safety, with emphasis on improving food value, shelf life, and meeting nutritional and industry standards.
