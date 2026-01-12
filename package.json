@@ -48,7 +48,8 @@
     "react-dom": "19.2.0",
     "resend": "latest",
     "sonner": "^2.0.7",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "watchup-react": "^1.0.0"
   },
   "devDependencies": {
     "@serwist/turbopack": "^9.4.2",

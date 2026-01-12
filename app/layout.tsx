@@ -5,6 +5,7 @@ import { LayoutContent } from '@/components/LayoutContent'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from '@/components/ui/sonner'
 import { SerwistProvider } from './lib/client'
+import { WatchupProvider } from 'watchup-react'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -80,7 +81,13 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {' '}
         <SerwistProvider swUrl="/serwist/sw.js">
-          <LayoutContent>{children}</LayoutContent>
+          <WatchupProvider
+            projectId="aba266cb-dabf-4fd2-a53f-1633352a8786"
+            apiKey="aba266cb-dabf-4fd2-a53f-1633352a8786"
+            baseUrl="https://mycampuslib.vercel.app"
+          >
+            <LayoutContent>{children}</LayoutContent>
+          </WatchupProvider>
         </SerwistProvider>
         <Toaster position="top-center" theme="light" />
         <Analytics />
