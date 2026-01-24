@@ -10,7 +10,8 @@ type Stats = {
 
 async function getStats(): Promise<Stats | null> {
   try {
-    const response = await fetch(`/api/stats/dbmcl`, {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+    const response = await fetch(`${baseUrl}/api/stats/dbmcl`, {
       cache: 'no-store',
     })
 
