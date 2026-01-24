@@ -1,4 +1,5 @@
 import AdminStats from '@/components/AdminStats'
+import { createClient } from '@/lib/supabase/server'
 
 type Stats = {
   totalResources: number
@@ -10,24 +11,26 @@ type Stats = {
 
 async function getStats(): Promise<Stats | null> {
   try {
-    const response = await fetch(`/api/stats/dbmcl`, {
-      cache: 'no-store',
-    })
+    const supabase = await createClient()
 
-    if (!response.ok) {
-      console.error('Failed to fetch stats:', response.status)
-      return null
-    }
-
-    const { resourceCount, userCount, downloadCount, viewCount, pendingCount } =
-      await response.json()
+    const [resourceResult, userResult, downloadResult, viewResult, pendingResult] =
+      await Promise.all([
+        supabase.from('resources').select('*', { count: 'exact', head: true }),
+        supabase.from('users').select('*', { count: 'exact', head: true }),
+        supabase.from('download_history').select('*', { count: 'exact', head: true }),
+        supabase.from('view_history').select('*', { count: 'exact', head: true }),
+        supabase
+          .from('resources')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_approved', false),
+      ])
 
     return {
-      totalResources: resourceCount || 0,
-      totalUsers: userCount || 0,
-      totalDownloads: downloadCount || 0,
-      totalViews: viewCount || 0,
-      pendingReviews: pendingCount || 0,
+      totalResources: resourceResult.count || 0,
+      totalUsers: userResult.count || 0,
+      totalDownloads: downloadResult.count || 0,
+      totalViews: viewResult.count || 0,
+      pendingReviews: pendingResult.count || 0,
     }
   } catch (error) {
     console.error('Error fetching stats:', error)
