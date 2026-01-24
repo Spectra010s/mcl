@@ -1,49 +1,24 @@
-'use client'
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
 import { FileText, Users, Download, Eye, Clock, CheckCircle } from 'lucide-react'
-import { toast } from 'sonner'
 
-export default function AdminStats() {
-  const [stats, setStats] = useState({
+type Stats = {
+  totalResources: number
+  totalUsers: number
+  totalDownloads: number
+  totalViews: number
+  pendingReviews: number
+} | null
+
+export default function AdminStats({ stats }: { stats: Stats }) {
+  const displayStats = stats || {
     totalResources: 0,
     totalUsers: 0,
     totalDownloads: 0,
     totalViews: 0,
     pendingReviews: 0,
-  })
-
-  const fetchStats = async () => {
-    try {
-      const response = await fetch('/api/stats/dbmcl', { cache: 'no-store' })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to fetch statistics')
-      }
-
-      const { resourceCount, userCount, downloadCount, viewCount, pendingCount } =
-        await response.json()
-
-      setStats({
-        totalResources: resourceCount || 0,
-        totalUsers: userCount || 0,
-        totalDownloads: downloadCount || 0,
-        totalViews: viewCount || 0,
-        pendingReviews: pendingCount || 0,
-      })
-    } catch (error) {
-      console.error('Error fetching stats:', error)
-      toast.error('Error fetching stats')
-    }
   }
-
-  useEffect(() => {
-    fetchStats()
-  }, [])
 
   return (
     <main className="p-6 max-w-7xl mx-auto">
@@ -57,7 +32,7 @@ export default function AdminStats() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{stats.totalResources}</p>
+            <p className="text-3xl font-bold">{displayStats.totalResources}</p>
           </CardContent>
         </Card>
 
@@ -69,7 +44,7 @@ export default function AdminStats() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{stats.totalUsers}</p>
+            <p className="text-3xl font-bold">{displayStats.totalUsers}</p>
           </CardContent>
         </Card>
 
@@ -81,7 +56,7 @@ export default function AdminStats() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{stats.totalDownloads}</p>
+            <p className="text-3xl font-bold">{displayStats.totalDownloads}</p>
           </CardContent>
         </Card>
 
@@ -93,7 +68,7 @@ export default function AdminStats() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{stats.totalViews}</p>
+            <p className="text-3xl font-bold">{displayStats.totalViews}</p>
           </CardContent>
         </Card>
 
@@ -105,7 +80,7 @@ export default function AdminStats() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-primary">{stats.pendingReviews}</p>
+            <p className="text-3xl font-bold text-primary">{displayStats.pendingReviews}</p>
           </CardContent>
         </Card>
       </div>
@@ -124,9 +99,9 @@ export default function AdminStats() {
             <Button asChild className="w-full">
               <Link href="/admin/reviews">
                 Go to Reviews
-                {stats.pendingReviews > 0 && (
+                {displayStats.pendingReviews > 0 && (
                   <span className="ml-2 px-2 py-0.5 bg-primary-foreground text-primary rounded-full text-xs">
-                    {stats.pendingReviews}
+                    {displayStats.pendingReviews}
                   </span>
                 )}
               </Link>
