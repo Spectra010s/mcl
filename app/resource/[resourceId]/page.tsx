@@ -20,7 +20,7 @@ interface Resource {
   uploaded_by: string | null
 
   user_bookmarks: Array<{
-    user_id: number
+    user_id: string
   }>
 
   course_id: {
