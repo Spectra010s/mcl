@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, ArrowLeft, Trash2 } from 'lucide-react'
+import { Plus, ArrowLeft, Trash2, Edit } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import {
@@ -117,17 +117,29 @@ export default function AdminFacultiesPage() {
               <CardHeader>
                 <CardTitle className="flex items-start justify-between">
                   <span className="flex-1">{faculty.full_name}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => {
-                      setFacultyToDelete(faculty)
-                      setDeleteDialogOpen(true)
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-blue-600 hover:text-blue-600 hover:bg-blue-50"
+                      asChild
+                    >
+                      <Link href={`/admin/faculties/${faculty.id}/edit`}>
+                        <Edit className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => {
+                        setFacultyToDelete(faculty)
+                        setDeleteDialogOpen(true)
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardTitle>
                 <CardDescription>{faculty.short_name}</CardDescription>
               </CardHeader>
