@@ -25,7 +25,7 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 
 interface PendingResource {
-  id: string
+  id: number
   title: string
   description: string
   file_type: string
@@ -72,7 +72,7 @@ export default function AdminResource({ initialResources }: AdminResourceProps) 
       if (!response.ok) throw new Error('Response Approval failed')
 
       toast.success('success', { description: 'File approved successfully' })
-      setPendingFiles(pendingFiles.filter(r => r.id !== resourceId))
+      setPendingFiles(pendingFiles.filter(r => r.id.toString() !== resourceId))
     } catch (error: unknown) {
       toast.error('Error', {
         description: error instanceof Error ? error.message : 'Approval failed',
@@ -193,7 +193,7 @@ export default function AdminResource({ initialResources }: AdminResourceProps) 
 
                   <div className="flex gap-3 pt-4">
                     <Button
-                      onClick={() => handleApprove(resource.id)}
+                      onClick={() => handleApprove(resource.id.toString())}
                       disabled={processing}
                       className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
                     >
