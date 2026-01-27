@@ -101,7 +101,7 @@ export function Footer() {
 
         <div className="flex justify-between items-center gap-2 text-sm text-muted-foreground">
           <div className="flex flex-col mb-1">
-            <p>&copy; 2025 My Campus Library. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} My Campus Library. All rights reserved.</p>
             <p>Made with ❤️ by Spectra010s</p>
           </div>
           <Link
