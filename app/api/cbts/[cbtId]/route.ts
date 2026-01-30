@@ -30,8 +30,7 @@ export async function GET(request: Request, { params }: RouteParams) {
               full_name
             )
           )
-        ),
-        questions(count)
+        )
       `,
             )
             .eq('id', cbtId)
@@ -45,13 +44,7 @@ export async function GET(request: Request, { params }: RouteParams) {
             throw error
         }
 
-        const formattedData = {
-            ...cbt,
-            questionCount: cbt.questions[0]?.count || 0,
-            questions: undefined,
-        }
-
-        return NextResponse.json(formattedData)
+        return NextResponse.json(cbt)
     } catch (error) {
         console.error('Error fetching CBT:', error)
         return NextResponse.json({ error: 'Failed to fetch CBT' }, { status: 500 })

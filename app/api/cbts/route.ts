@@ -2,13 +2,13 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-    try {
-        const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-        const { data: cbts, error } = await supabase
-            .from('cbts')
-            .select(
-                `
+    const { data: cbts, error } = await supabase
+      .from('cbts')
+      .select(
+        `
         id,
         title,
         description,
@@ -25,24 +25,16 @@ export async function GET() {
               full_name
             )
           )
-        ),
-        questions(count)
+        )
       `,
-            )
-            .eq('is_active', true)
-            .order('created_at', { ascending: false })
+      )
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
 
-        if (error) throw error
-
-        const formattedData = cbts.map(cbt => ({
-            ...cbt,
-            questionCount: cbt.questions[0]?.count || 0,
-            questions: undefined,
-        }))
-
-        return NextResponse.json(formattedData)
-    } catch (error) {
-        console.error('Error fetching CBTs:', error)
-        return NextResponse.json({ error: 'Failed to fetch CBTs' }, { status: 500 })
-    }
+    if (error) throw error
+    return NextResponse.json(cbts)
+  } catch (error) {
+    console.error('Error fetching CBTs:', error)
+    return NextResponse.json({ error: 'Failed to fetch CBTs' }, { status: 500 })
+  }
 }
