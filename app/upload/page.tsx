@@ -316,86 +316,97 @@ export default function UploadPage() {
             <div className="space-y-4">
               <h3 className="font-semibold text-primary">Classification</h3>
 
-              <div className="grid gap-2">
-                <Label htmlFor="faculty">Select Faculty *</Label>
-                <Select value={faculty} onValueChange={handleFacultyChange}>
-                  <SelectTrigger className="border-primary/30">
-                    <SelectValue placeholder="Select faculty" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {faculties.map(f => (
-                      <SelectItem key={f.id} value={String(f.id)}>
-                        {f.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="faculty">Select Faculty *</Label>
+                  <Select value={faculty} onValueChange={handleFacultyChange}>
+                    <SelectTrigger className="border-primary/30">
+                      <SelectValue placeholder="Select faculty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {faculties.map(f => (
+                        <SelectItem key={f.id} value={String(f.id)}>
+                          <span className="truncate block max-w-[200px] md:max-w-xs">
+                            {f.full_name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="department">Select Department *</Label>
-                <Select value={department} onValueChange={handleDeptChange} disabled={!faculty}>
-                  <SelectTrigger className="border-primary/30">
-                    <SelectValue
-                      placeholder={faculty ? 'Select Department' : 'Select faculty first'}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {isFetching && !department && faculty && (
-                      <div className="flex items-center justify-center py-2">
-                        <div className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                      </div>
-                    )}
-                    {departments.map(d => (
-                      <SelectItem key={d.id} value={String(d.id)}>
-                        {d.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="department">Select Department *</Label>
+                  <Select value={department} onValueChange={handleDeptChange} disabled={!faculty}>
+                    <SelectTrigger className="border-primary/30">
+                      <SelectValue
+                        placeholder={faculty ? 'Select Department' : 'Select faculty first'}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {isFetching && !department && faculty && (
+                        <div className="flex items-center justify-center py-2">
+                          <div className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                        </div>
+                      )}
+                      {departments.map(d => (
+                        <SelectItem key={d.id} value={String(d.id)}>
+                          <span className="truncate block max-w-[200px] md:max-w-xs">
+                            {d.full_name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="level">Select Academic Level *</Label>
-                <Select value={level} onValueChange={handleLevelChange} disabled={!department}>
-                  <SelectTrigger className="border-primary/30">
-                    <SelectValue
-                      placeholder={department ? 'Select Academic Level' : 'Select department first'}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {isFetching && !level && department && (
-                      <div className="flex items-center justify-center py-2">
-                        <div className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                      </div>
-                    )}
-                    {levels.map(l => (
-                      <SelectItem key={l.id} value={String(l.id)}>
-                        {l.level_number}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="course">Select Course *</Label>
-                <Select value={course} onValueChange={setCourse} disabled={!level}>
-                  <SelectTrigger className="border-primary/30">
-                    <SelectValue placeholder={level ? 'Select Course' : 'Select level first'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {isFetching && !course && level && (
-                      <div className="flex items-center justify-center py-2">
-                        <div className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                      </div>
-                    )}
-                    {courses.map(c => (
-                      <SelectItem key={c.id} value={String(c.id)}>
-                        {c.course_code}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="grid gap-2">
+                  <Label htmlFor="level">Select Academic Level *</Label>
+                  <Select value={level} onValueChange={handleLevelChange} disabled={!department}>
+                    <SelectTrigger className="border-primary/30">
+                      <SelectValue
+                        placeholder={
+                          department ? 'Select Academic Level' : 'Select department first'
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {isFetching && !level && department && (
+                        <div className="flex items-center justify-center py-2">
+                          <div className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                        </div>
+                      )}
+                      {levels.map(l => (
+                        <SelectItem key={l.id} value={String(l.id)}>
+                          {l.level_number}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="course">Select Course *</Label>
+                  <Select value={course} onValueChange={setCourse} disabled={!level}>
+                    <SelectTrigger className="border-primary/30">
+                      <SelectValue placeholder={level ? 'Select Course' : 'Select level first'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {isFetching && !course && level && (
+                        <div className="flex items-center justify-center py-2">
+                          <div className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                        </div>
+                      )}
+                      {courses.map(c => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          <span className="truncate block max-w-[200px] md:max-w-xs">
+                            {c.course_code}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
@@ -422,8 +433,10 @@ export default function UploadPage() {
                   <label htmlFor="file" className="cursor-pointer">
                     <Upload className="w-8 h-8 text-primary/40 mx-auto mb-2" />
                     {file ? (
-                      <div>
-                        <p className="font-semibold text-primary">{file.name}</p>
+                      <div className="max-w-[300px] mx-auto overflow-hidden">
+                        <p className="font-semibold text-primary truncate" title={file.name}>
+                          {file.name}
+                        </p>
                         <p className="text-sm text-muted-foreground">
                           {(file.size / 1024 / 1024).toFixed(2)} MB - Type:{' '}
                           {getFileTypeFromExtension(file.name)}
