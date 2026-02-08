@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Download, BookmarkPlus, ChevronLeft, Eye } from 'lucide-react'
 import { ResourcePreview } from '@/components/ResourcePreview'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import LinkifiedText from '@/components/LinkifiedText'
 
@@ -47,6 +47,8 @@ interface Resource {
 
 export default function ResourcePage() {
   const params = useParams()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const resourceId = params.resourceId as string
   const [resource, setResource] = useState<Resource | null>(null)
   const [user, setUser] = useState<User | null>(null)
@@ -55,6 +57,7 @@ export default function ResourcePage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [preview, setPreview] = useState<{ url: string; type: string } | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [hasAutoTriggered, setHasAutoTriggered] = useState(false)
 
   const supabase = createClient()
 
@@ -123,6 +126,25 @@ export default function ResourcePage() {
     fetchData()
   }, [resourceId, supabase])
 
+  // Handle auto-trigger after login
+  useEffect(() => {
+    const action = searchParams.get('action')
+    if (action && user && resource && !loading && !hasAutoTriggered) {
+      setHasAutoTriggered(true)
+
+      // Clean up URL
+      const newParams = new URLSearchParams(searchParams.toString())
+      newParams.delete('action')
+      const newQuery = newParams.toString()
+      router.replace(`/resource/${resourceId}${newQuery ? `?${newQuery}` : ''}`, { scroll: false })
+
+      // Execute action
+      if (action === 'download') handleDownload()
+      else if (action === 'preview') handlePreview()
+      else if (action === 'bookmark') handleBookmark()
+    }
+  }, [searchParams, user, resource, loading, hasAutoTriggered, resourceId, router])
+
   if (loading) {
     return (
       <main className="flex-1 flex items-center justify-center py-20">
@@ -140,6 +162,12 @@ export default function ResourcePage() {
   }
 
   const handleDownload = () => {
+    if (!user) {
+      const returnUrl = encodeURIComponent(`/resource/${resourceId}?action=download`)
+      router.push(`/login?returnTo=${returnUrl}`)
+      return
+    }
+
     setActionLoading('download')
 
     const form = document.createElement('form')
@@ -154,6 +182,12 @@ export default function ResourcePage() {
   }
 
   const handleBookmark = async () => {
+    if (!user) {
+      const returnUrl = encodeURIComponent(`/resource/${resourceId}?action=bookmark`)
+      router.push(`/login?returnTo=${returnUrl}`)
+      return
+    }
+
     setActionLoading('bookmark')
     try {
       const response = await fetch(`/api/resources/${resourceId}/bookmark`, {
@@ -173,6 +207,12 @@ export default function ResourcePage() {
   }
 
   const handlePreview = async () => {
+    if (!user) {
+      const returnUrl = encodeURIComponent(`/resource/${resourceId}?action=preview`)
+      router.push(`/login?returnTo=${returnUrl}`)
+      return
+    }
+
     setActionLoading('preview')
     try {
       const response = await fetch(`/api/resources/${resourceId}/preview`)
@@ -278,44 +318,36 @@ export default function ResourcePage() {
         )}
 
         {/* Action Buttons */}
-        {user ? (
-          <div className="flex gap-3 mb-8">
-            <Button
-              onClick={handleDownload}
-              disabled={actionLoading === 'download'}
-              className="flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              {actionLoading === 'download' ? 'Downloading...' : 'Download'}
-            </Button>
-            {isPreviewable(resource.file_type) && (
-              <Button
-                variant="outline"
-                onClick={handlePreview}
-                disabled={actionLoading === 'preview'}
-                className="flex items-center gap-2"
-              >
-                <Eye className="w-4 h-4" />
-                {actionLoading === 'preview' ? 'Loading...' : 'Preview'}
-              </Button>
-            )}
+        <div className="flex gap-3 mb-8">
+          <Button
+            onClick={handleDownload}
+            disabled={actionLoading === 'download'}
+            className="flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            {actionLoading === 'download' ? 'Downloading...' : 'Download'}
+          </Button>
+          {isPreviewable(resource.file_type) && (
             <Button
               variant="outline"
-              className={`flex items-center gap-2 ${isBookmarked ? 'bg-blue-50 text-blue-600' : 'bg-transparent'}`}
-              onClick={handleBookmark}
-              disabled={actionLoading === 'bookmark'}
+              onClick={handlePreview}
+              disabled={actionLoading === 'preview'}
+              className="flex items-center gap-2"
             >
-              <BookmarkPlus className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
-              {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+              <Eye className="w-4 h-4" />
+              {actionLoading === 'preview' ? 'Loading...' : 'Preview'}
             </Button>
-          </div>
-        ) : (
-          <Link href="/login" className="block mb-8">
-            <Button size="lg" className="w-full">
-              Login to Download
-            </Button>
-          </Link>
-        )}
+          )}
+          <Button
+            variant="outline"
+            className={`flex items-center gap-2 ${isBookmarked ? 'bg-blue-50 text-blue-600' : 'bg-transparent'}`}
+            onClick={handleBookmark}
+            disabled={actionLoading === 'bookmark'}
+          >
+            <BookmarkPlus className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
+            {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+          </Button>
+        </div>
 
         {/* Resource Preview Component */}
         {preview && (
