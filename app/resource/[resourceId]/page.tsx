@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Download, BookmarkPlus, ChevronLeft } from 'lucide-react'
+import { Download, BookmarkPlus, ChevronLeft, Eye } from 'lucide-react'
+import { ResourcePreview } from '@/components/ResourcePreview'
 import { useParams } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import LinkifiedText from '@/components/LinkifiedText'
@@ -52,6 +53,8 @@ export default function ResourcePage() {
   const [loading, setLoading] = useState<boolean>(true)
   const [isBookmarked, setIsBookmarked] = useState<boolean>(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [preview, setPreview] = useState<{ url: string; type: string } | null>(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   const supabase = createClient()
 
@@ -169,6 +172,28 @@ export default function ResourcePage() {
     }
   }
 
+  const handlePreview = async () => {
+    setActionLoading('preview')
+    try {
+      const response = await fetch(`/api/resources/${resourceId}/preview`)
+      if (!response.ok) throw new Error('Preview failed')
+
+      const data = await response.json()
+      setPreview({ url: data.signedUrl, type: data.fileType })
+      setIsPreviewOpen(true)
+    } catch (error) {
+      console.error('Preview error:', error)
+      alert('Failed to generate preview')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const isPreviewable = (type: string) => {
+    const previewableTypes = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']
+    return previewableTypes.includes(type.toLowerCase())
+  }
+
   const course = resource.course_id
   const level = course?.academic_level_id
   const dept = level?.department_id
@@ -263,6 +288,17 @@ export default function ResourcePage() {
               <Download className="w-4 h-4" />
               {actionLoading === 'download' ? 'Downloading...' : 'Download'}
             </Button>
+            {isPreviewable(resource.file_type) && (
+              <Button
+                variant="outline"
+                onClick={handlePreview}
+                disabled={actionLoading === 'preview'}
+                className="flex items-center gap-2"
+              >
+                <Eye className="w-4 h-4" />
+                {actionLoading === 'preview' ? 'Loading...' : 'Preview'}
+              </Button>
+            )}
             <Button
               variant="outline"
               className={`flex items-center gap-2 ${isBookmarked ? 'bg-blue-50 text-blue-600' : 'bg-transparent'}`}
@@ -279,6 +315,17 @@ export default function ResourcePage() {
               Login to Download
             </Button>
           </Link>
+        )}
+
+        {/* Resource Preview Component */}
+        {preview && (
+          <ResourcePreview
+            isOpen={isPreviewOpen}
+            onClose={() => setIsPreviewOpen(false)}
+            title={resource.title}
+            fileUrl={preview.url}
+            fileType={preview.type}
+          />
         )}
       </main>
     </>
