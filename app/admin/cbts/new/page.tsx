@@ -60,6 +60,7 @@ export default function NewCBTPage() {
     description: '',
     timeLimitMinutes: '',
     passingScore: '70',
+    questionLimit: '',
   })
 
   useEffect(() => {
@@ -164,6 +165,7 @@ export default function NewCBTPage() {
           description: formData.description || null,
           timeLimitMinutes: formData.timeLimitMinutes ? parseInt(formData.timeLimitMinutes) : null,
           passingScore: parseInt(formData.passingScore),
+          questionLimit: formData.questionLimit ? parseInt(formData.questionLimit) : null,
         }),
       })
 
@@ -370,6 +372,21 @@ export default function NewCBTPage() {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="questionLimit">Question Limit (per attempt)</Label>
+                <Input
+                  id="questionLimit"
+                  type="number"
+                  min="1"
+                  value={formData.questionLimit}
+                  onChange={e => setFormData({ ...formData, questionLimit: e.target.value })}
+                  placeholder="Show all questions"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Number of random questions to show the user from the total question pool.
+                </p>
               </div>
 
               <div className="flex gap-4 pt-4">
