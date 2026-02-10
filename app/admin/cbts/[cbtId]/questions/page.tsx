@@ -60,8 +60,12 @@ export default function QuestionsPage() {
     setLoading(true)
     try {
       const [cbtRes, questionsRes] = await Promise.all([
-        fetch(`/api/admin/cbts/${cbtId}`, { cache: 'no-store' }),
-        fetch(`/api/admin/cbts/${cbtId}/questions`, { cache: 'no-store' }),
+        fetch(`/api/admin/cbts/${cbtId}`, {
+          cache: 'no-store',
+        }),
+        fetch(`/api/admin/cbts/${cbtId}/questions`, {
+          cache: 'no-store',
+        }),
       ])
 
       if (cbtRes.ok) {
@@ -126,8 +130,12 @@ export default function QuestionsPage() {
       try {
         const response = await fetch(`/api/admin/cbts/${cbtId}/questions/import`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content,
+          }),
         })
 
         const result = await response.json()
@@ -183,7 +191,7 @@ export default function QuestionsPage() {
                 {cbt?.courses?.course_code}: {cbt?.courses?.course_title}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2">
               <div className="relative">
                 <input
                   type="file"
@@ -230,7 +238,8 @@ export default function QuestionsPage() {
                     <CardDescription className="mt-1 flex items-center gap-2">
                       <Badge variant="outline">{question.question_type.toUpperCase()}</Badge>
                       <Badge variant="secondary">
-                        {question.points} pt{question.points !== 1 ? 's' : ''}
+                        {question.points} pt
+                        {question.points !== 1 ? 's' : ''}
                       </Badge>
                     </CardDescription>
                   </div>
