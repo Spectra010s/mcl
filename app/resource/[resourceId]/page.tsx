@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Download, BookmarkPlus, ChevronLeft, Eye } from 'lucide-react'
 import { ResourcePreview } from '@/components/ResourcePreview'
+import { toast } from 'sonner'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import LinkifiedText from '@/components/LinkifiedText'
@@ -216,14 +217,19 @@ export default function ResourcePage() {
     setActionLoading('preview')
     try {
       const response = await fetch(`/api/resources/${resourceId}/preview`)
-      if (!response.ok) throw new Error('Preview failed')
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Preview failed')
+      }
 
       const data = await response.json()
       setPreview({ url: data.signedUrl, type: data.fileType })
       setIsPreviewOpen(true)
     } catch (error) {
       console.error('Preview error:', error)
-      alert('Failed to generate preview')
+      toast.error(
+        'Unable to open preview. This resource may not be available for viewing at the moment.',
+      )
     } finally {
       setActionLoading(null)
     }
