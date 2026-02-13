@@ -1,10 +1,18 @@
-'use client'
-
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import dynamic from 'next/dynamic'
 import { X, Maximize2, Minimize2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+
+const PdfViewer = dynamic(() => import('./PdfViewer'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full bg-muted/20">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>
+  ),
+})
 
 interface ResourcePreviewProps {
   isOpen: boolean
@@ -153,11 +161,7 @@ export function ResourcePreview({
       {/* Content Area */}
       <div className="flex-1 bg-muted/20 relative min-h-0">
         {isPDF ? (
-          <iframe
-            src={`${fileUrl}#toolbar=0`}
-            className="w-full h-full border-none"
-            title="PDF Preview"
-          />
+          <PdfViewer url={fileUrl} />
         ) : isImage ? (
           <div className="w-full h-full flex items-center justify-center p-4">
             <img
