@@ -10,7 +10,11 @@ export const size = {
 export const contentType = 'image/png'
 
 interface ImageProps {
-  params: Promise<{ facultyId: string; departmentId: string; levelId: string }>
+  params: Promise<{
+    facultyId: string
+    departmentId: string
+    levelId: string
+  }>
 }
 
 export default async function Image(props: ImageProps) {
@@ -34,7 +38,7 @@ export default async function Image(props: ImageProps) {
   const dept = deptResult.data
   const level = levelResult.data
 
-  const levelName = level?.level_number ? `Level ${level.level_number}` : 'Level'
+  const levelName = level?.level_number || 'Level'
   const departmentName = dept?.full_name || 'Department'
   const facultyName = faculty?.full_name || 'Faculty'
 
@@ -122,7 +126,6 @@ export default async function Image(props: ImageProps) {
               borderRadius: '6px',
               marginBottom: '24px',
               fontWeight: '500',
-              width: 'fit-content',
             }}
           >
             Academic Level
@@ -130,7 +133,7 @@ export default async function Image(props: ImageProps) {
 
           <h1
             style={{
-              fontSize: '72px',
+              fontSize: '68px',
               fontWeight: '700',
               color: '#0f172a',
               margin: '0 0 32px 0',
@@ -138,7 +141,7 @@ export default async function Image(props: ImageProps) {
               letterSpacing: '-0.02em',
             }}
           >
-            {levelName}
+            {levelName} Level: {departmentName}
           </h1>
 
           <p
