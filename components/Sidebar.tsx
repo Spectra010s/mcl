@@ -14,8 +14,10 @@ import {
   Folder,
   HelpCircle,
   Shield,
+  Bug,
 } from 'lucide-react'
 import { User } from '@supabase/supabase-js'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
 
 interface SidebarProps {
   mobileOpen?: boolean
@@ -216,6 +218,16 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                 <FileText className="w-4 h-4" />
                 Documentation
               </Link>
+              <FeedbackDialog>
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 font-normal text-sm text-sidebar-foreground/70 hover:text-sidebar-primary hover:bg-transparent flex items-center gap-2 w-full justify-start"
+                  onClick={onMobileClose}
+                >
+                  <Bug className="w-4 h-4" />
+                  Report an Issue
+                </Button>
+              </FeedbackDialog>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { FeedbackTrigger } from '@/components/FeedbackTrigger'
 
 export function Footer() {
   return (
@@ -44,6 +45,9 @@ export function Footer() {
                 >
                   Help & FAQ
                 </Link>
+              </li>
+              <li>
+                <FeedbackTrigger />
               </li>
             </ul>
           </div>
