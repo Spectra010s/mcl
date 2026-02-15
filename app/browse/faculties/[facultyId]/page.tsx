@@ -75,9 +75,9 @@ export default async function DepartmentsPage(props: PageProps) {
 
   const faculty = await getDepartmentsData(facultyId)
 
-  const generalCourses = faculty?.departments?.find(d => d.full_name === 'General Courses')
+  const generalCourses = faculty?.departments?.find(d => d.full_name?.startsWith('General Courses'))
   const regularDepartments =
-    faculty?.departments?.filter(d => d.full_name !== 'General Courses') || []
+    faculty?.departments?.filter(d => !d.full_name?.startsWith('General Courses')) || []
 
   return (
     <main className="flex-1 max-w-7xl mx-auto px-4 py-12 md:px-6">
