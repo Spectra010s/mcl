@@ -1,7 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { FileText, Users, Download, Eye, Clock, CheckCircle, ClipboardList } from 'lucide-react'
+import {
+  FileText,
+  Users,
+  Download,
+  Eye,
+  Clock,
+  CheckCircle,
+  ClipboardList,
+  MessageSquare,
+} from 'lucide-react'
 
 type Stats = {
   totalResources: number
@@ -10,6 +19,7 @@ type Stats = {
   totalViews: number
   pendingReviews: number
   totalCBTs: number
+  openFeedback: number
 } | null
 
 export default function AdminStats({ stats }: { stats: Stats }) {
@@ -20,6 +30,7 @@ export default function AdminStats({ stats }: { stats: Stats }) {
     totalViews: 0,
     pendingReviews: 0,
     totalCBTs: 0,
+    openFeedback: 0,
   }
 
   return (
@@ -97,6 +108,18 @@ export default function AdminStats({ stats }: { stats: Stats }) {
             <p className="text-3xl font-bold">{displayStats.totalCBTs}</p>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Open Feedback
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{displayStats.openFeedback}</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Quick Actions */}
@@ -164,6 +187,21 @@ export default function AdminStats({ stats }: { stats: Stats }) {
           <CardContent>
             <Button asChild className="w-full" variant="outline">
               <Link href="/admin/cbts">Manage CBTs</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              Feedback
+            </CardTitle>
+            <CardDescription>View bug reports and feature requests from users</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full" variant="outline">
+              <Link href="/admin/feedback">Manage Feedback</Link>
             </Button>
           </CardContent>
         </Card>
