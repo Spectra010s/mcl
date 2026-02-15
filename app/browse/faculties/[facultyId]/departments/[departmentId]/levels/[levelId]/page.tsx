@@ -44,7 +44,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 
   const { dept, level } = await getCoursePageData(facultyId, departmentId, levelId)
 
-  const isGeneralCourse = dept?.full_name === 'General Courses'
+  const isGeneralCourse = dept?.full_name?.startsWith('General Courses')
   const title = isGeneralCourse
     ? `${level?.level_number} Lvl ${dept?.full_name} - My Campus Library`
     : `${level?.level_number} Lvl ${dept?.full_name} Department Courses - My Campus Library`

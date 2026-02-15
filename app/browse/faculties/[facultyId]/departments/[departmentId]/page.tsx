@@ -48,7 +48,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 
   const { faculty, dept } = await getDepartmentData(departmentId, facultyId)
 
-  const isGeneralCourse = dept?.full_name === 'General Courses'
+  const isGeneralCourse = dept?.full_name?.startsWith('General Courses')
   const title = isGeneralCourse
     ? `${dept?.full_name} - My Campus Library`
     : `${dept?.full_name} Department - My Campus Library`

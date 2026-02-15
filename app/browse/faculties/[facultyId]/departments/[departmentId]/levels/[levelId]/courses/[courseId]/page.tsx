@@ -79,7 +79,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
     levelId,
     courseId,
   )
-  const isGeneralCourse = dept?.full_name === 'General Courses'
+  const isGeneralCourse = dept?.full_name?.startsWith('General Courses')
   const description = `Explore the list of resources for ${course?.course_title} in ${level?.level_number} lvl${
     isGeneralCourse ? '' : ` for ${dept?.full_name} department`
   }`
