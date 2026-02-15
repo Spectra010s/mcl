@@ -126,6 +126,70 @@ export async function sendApprovalEmail(
   }
 }
 
+export async function sendFeedbackNotificationEmail(
+  type: string,
+  description: string,
+  screenshotUrl: string | null,
+  userName: string | null,
+  userEmail: string | null,
+) {
+  try {
+    const typeLabel = type === 'bug' ? '🐛 Bug Report' : '💡 Feature Request'
+    const userInfo = userName
+      ? `<strong>${escapeHtml(userName)}</strong> (${escapeHtml(userEmail || 'No email')})`
+      : 'Anonymous (not logged in)'
+
+    const { error } = await resend.emails.send({
+      from: `My Campus Library <${fromEmail}>`,
+      to: 'spectra010s@gmail.com',
+      replyTo: userEmail || replyToEmail,
+      subject: `[MCL Feedback] ${typeLabel}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #182b5c;">New Feedback Received</h2>
+          
+          <div style="background-color: ${type === 'bug' ? '#fef2f2' : '#fffbeb'}; padding: 15px; border-left: 4px solid ${type === 'bug' ? '#ef4444' : '#f59e0b'}; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: ${type === 'bug' ? '#dc2626' : '#d97706'};">${typeLabel}</h4>
+          </div>
+
+          <h4>From:</h4>
+          <p>${userInfo}</p>
+          
+          <h4>Description:</h4>
+          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 4px; margin: 10px 0;">
+            <p style="margin: 0; white-space: pre-wrap;">${escapeHtml(description)}</p>
+          </div>
+          
+          ${
+            screenshotUrl
+              ? `
+            <h4>Screenshot:</h4>
+            <p><a href="${screenshotUrl}" style="color: #0256a5;">View Screenshot</a></p>
+          `
+              : ''
+          }
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
+          
+          <p style="color: #999; font-size: 12px;">
+            This feedback was submitted via My Campus Library.
+          </p>
+        </div>
+      `,
+    })
+
+    if (error) {
+      console.error('[Email] Error sending feedback notification:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('[Email] Exception sending feedback notification:', error)
+    return false
+  }
+}
+
 function escapeHtml(text: string): string {
   const map: { [key: string]: string } = {
     '&': '&amp;',
