@@ -219,14 +219,13 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                 Documentation
               </Link>
               <FeedbackDialog>
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-normal text-sm text-sidebar-foreground/70 hover:text-sidebar-primary hover:bg-transparent flex items-center gap-2 w-full justify-start"
+                <button
+                  className="text-sm text-sidebar-foreground/70 hover:text-sidebar-primary flex items-center gap-2 transition-colors"
                   onClick={onMobileClose}
                 >
                   <Bug className="w-4 h-4" />
                   Report an Issue
-                </Button>
+                </button>
               </FeedbackDialog>
             </div>
           </div>
