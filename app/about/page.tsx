@@ -186,20 +186,44 @@ export default function AboutPage() {
 
         {/* Meet the Creator */}
         <div className="mt-12">
-          <h2 className="text-2xl font-bold text-primary mb-6">Meet the Creator</h2>
+          <h2 className="text-2xl font-bold text-primary mb-6">Founding Team</h2>
           <div className="grid md:grid-cols-1 gap-6">
             <CreatorCard
-              name="Spectra010s"
-              role="Founder & Lead Developer"
+              name="Adetayo Adeloye"
+              role="Lead Developer & Project Architect"
               bio="Passionate about creating accessible educational technology that bridges the gap between students and academic resources. My Campus Library was born from the vision of making quality education accessible to all students, regardless of their background or location."
+              imageSrc="/spectra010s.jpg"
               socials={[
                 { icon: <Github className="w-5 h-5" />, url: 'https://github.com/Spectra010s' },
-                { icon: <Twitter className="w-5 h-5" />, url: 'https://x.com/Spectra010s' },
+                {
+                  icon: <Twitter className="w-5 h-5" />,
+                  url: 'https://x.com/Spectra010s',
+                },
                 {
                   icon: <Linkedin className="w-5 h-5" />,
                   url: 'https://linkedin.com/in/adeloye-adetayo-273723253',
                 },
-                { icon: <Mail className="w-5 h-5" />, url: 'mailto:spectra010s@gmail.com' },
+                {
+                  icon: <Mail className="w-5 h-5" />,
+                  url: 'mailto:spectra010s@gmail.com',
+                },
+              ]}
+            />
+            <CreatorCard
+              name="Martins Wonuade"
+              role="Project Co-Initiator & Concept Contributor"
+              bio="Initiator of the My Campus Library idea, contributing to the early vision of building a centralized academic resource hub for students. Passionate about technology-driven solutions that simplify access to knowledge and empower collaborative learning within campus communities."
+              imageSrc="/martins.jpg"
+              socials={[
+                { icon: <Github className="w-5 h-5" />, url: 'https://github.com/Mkay404' },
+                {
+                  icon: <Linkedin className="w-5 h-5" />,
+                  url: '',
+                },
+                {
+                  icon: <Mail className="w-5 h-5" />,
+                  url: 'mailto:wonuadeomartins@gmail.com',
+                },
               ]}
             />
           </div>
@@ -245,11 +269,16 @@ function CreatorCard({
   role,
   bio,
   socials,
+  imageSrc,
 }: {
   name: string
   role: string
   bio: string
-  socials: Array<{ icon: React.ReactNode; url: string }>
+  imageSrc: string
+  socials: Array<{
+    icon: React.ReactNode
+    url: string
+  }>
 }) {
   return (
     <Card className="border-primary/20 hover:shadow-lg transition-shadow">
@@ -257,7 +286,7 @@ function CreatorCard({
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 overflow-hidden">
             <Image
-              src="/spectra010s.jpg"
+              src={imageSrc}
               alt={name}
               width={64}
               height={64}
