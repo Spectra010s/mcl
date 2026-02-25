@@ -4,9 +4,6 @@ This document outlines the high-priority future features for the platform.
 
 ## High Priority (Next Steps)
 
-- [ ] **In-browser File Preview (PDF/Image Viewer)**
-  - Users should be able to view documents without downloading.
-  - Integration with PDF.js or similar for seamless viewing.
 - [ ] **Advanced Analytics Dashboard**
   - Activity tracking for popular resources.
   - Download and bookmark trends for admins.
@@ -20,6 +17,9 @@ This document outlines the high-priority future features for the platform.
 
 ## Recently Completed
 
+- [x] **In-browser File Preview (PDF/Image Viewer)**
+  - Users should be able to view documents without downloading.
+  - Integration with PDF.js or similar for seamless viewing.
 - [x] **CBT (Computer-Based Testing) System**
   - Full admin management for tests and questions.
   - Student testing engine with instant scoring.
