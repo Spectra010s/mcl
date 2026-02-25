@@ -124,7 +124,7 @@ Please review our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before participating 
 ## Roadmap
 
 - [x] Admin resource moderation dashboard
-- [ ] In-browser file preview (PDF/Image viewer)
+- [x] In-browser file preview (PDF/Image viewer)
 - [ ] Advanced analytics dashboard (Resource popularity, activity tracking)
 - [ ] Advanced search filters (by level, department)
 - [ ] Resource recommendations
