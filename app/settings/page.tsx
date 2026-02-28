@@ -1,6 +1,13 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import SettingsComponents from '@/components/SettingsComponents'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Account Settings',
+  description:
+    'Manage your profile information, update your username, and customize your account preferences.',
+}
 
 export default async function SettingsPage() {
   const supabase = await createClient()

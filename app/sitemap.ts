@@ -1,8 +1,8 @@
 import { MetadataRoute } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { baseUrl } from '@/constants'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mycampuslib.vercel.app'
   const supabase = await createClient()
 
   // 1. Static Routes
