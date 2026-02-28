@@ -47,7 +47,7 @@ interface Resource {
 
 interface ResourceClientProps {
   resource: Resource
-  user: User
+  user: User | null
   initialBookmark: boolean
 }
 
