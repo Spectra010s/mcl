@@ -19,6 +19,19 @@ export interface WebSiteNode {
     name: string
     logo: ImageObject
   }
+  creator?: {
+    '@type': 'Person'
+    name: string
+    alternateName?: string
+    url: string
+    image?: string
+    sameAs?: string[]
+    jobTitle?: string
+    worksFor?: {
+      '@type': 'Organization'
+      name: string
+    }
+  }
   potentialAction: {
     '@type': 'SearchAction'
     target: {
@@ -50,6 +63,8 @@ export interface OrganizationNode {
     addressLocality?: string
     addressRegion?: string
     addressCountry: string
+    postalCode: string
+    streetAdrress: string
   }
   foundingLocation?: {
     '@type': 'Place'
