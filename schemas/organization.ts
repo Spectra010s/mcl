@@ -24,11 +24,9 @@ export const organization: OrganizationNode = {
     '@type': 'PostalAddress',
     addressLocality: 'Ikole-Ekiti',
     addressRegion: 'Ekiti',
-    addressCountry: 'Nigeria',
-  },
-  parentOrganization: {
-    '@type': 'Organization',
-    name: 'Hiverra',
+    addressCountry: 'NG',
+    postalCode: '370231',
+    streetAddress: 'Ilotin, Aloke St.',
   },
   sameAs: ['https://github.com/Spectra010s/mcl'],
   contactPoint: {
