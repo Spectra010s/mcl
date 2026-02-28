@@ -64,7 +64,7 @@ export interface OrganizationNode {
     addressRegion?: string
     addressCountry: string
     postalCode: string
-    streetAdrress: string
+    streetAddress: string
   }
   foundingLocation?: {
     '@type': 'Place'
