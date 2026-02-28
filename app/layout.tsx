@@ -6,7 +6,13 @@ import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from '@/components/ui/sonner'
 import { SerwistProvider } from './lib/client'
 import WatchupProviderWrapper from '@/components/WatchUpWrapper'
-import JsonLd from '@/components/JsonLd'
+
+import { website } from '@/schemas/website'
+import { organization } from '@/schemas/organization'
+import { createSchema } from '@/lib/schema'
+import { mclName } from '@/constants'
+
+const globalSchema = createSchema([website, organization])
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -18,15 +24,14 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
-const APP_NAME = 'My Campus Library'
-const DEFAULT_TITLE = 'My Campus Library'
+const DEFAULT_TITLE = `${mclName} - Your Academic Resource Hub`
 const DEFAULT_DESC =
   'Empowering knowledge for every student — your library for study materials, past questions, and academic resources for effective learning.'
 
-const TITLE_TEMPLATE = '%s - My Campus Library'
+const TITLE_TEMPLATE = `%s - ${mclName}`
 
 export const metadata: Metadata = {
-  applicationName: APP_NAME,
+  applicationName: mclName,
   title: {
     default: DEFAULT_TITLE,
     template: TITLE_TEMPLATE,
@@ -73,12 +78,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <script
+          key="global-ldjson"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(globalSchema) }}
+        />
         <meta
           name="google-site-verification"
           content="Q24M4X9zoQ0B3kNG3W7ekoB2-3_2fJi8_vNH2W7dTNU"
         />
         <meta name="msvalidate.01" content="E8636E77457C3ED17C9AADD9084197F3" />
-        <JsonLd />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {' '}

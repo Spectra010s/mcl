@@ -4,9 +4,20 @@ import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { BookOpen } from 'lucide-react'
+import { generateBreadcrumbSchema, createSchema } from '@/lib/schema'
+import { baseUrl } from '@/constants'
+
+const breadcrumbNode = generateBreadcrumbSchema([
+  {
+    name: 'Faculties',
+    url: `${baseUrl}/browse/faculties`,
+  },
+])
+
+const jsonLd = createSchema([breadcrumbNode])
 
 export const metadata: Metadata = {
-  title: 'Browse Faculties - My Campus Library',
+  title: 'Browse Faculties',
   description: 'Explore Faculties within Fuoye',
 }
 
@@ -17,12 +28,12 @@ export default async function FacultiesPage() {
     .from('faculties')
     .select(
       `
-      id,
-      short_name,
-      full_name,
-      description,
-      departments:departments(count)
-    `,
+        id,
+        short_name,
+        full_name,
+        description,
+        departments:departments(count)
+        `,
     )
     .order('full_name')
 
@@ -32,6 +43,13 @@ export default async function FacultiesPage() {
 
   return (
     <>
+      <script
+        id="faculties-schema"
+        key="faculties-page"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <main className="flex-1 max-w-7xl mx-auto px-4 py-12 md:px-6">
         {/* Header */}
         <div className="mb-12">

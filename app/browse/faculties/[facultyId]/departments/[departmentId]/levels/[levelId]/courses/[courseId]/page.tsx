@@ -4,9 +4,16 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { ResourceCarousel } from '@/components/ResourceCarousel'
 import { ChevronLeft } from 'lucide-react'
+import { generateBreadcrumbSchema, createSchema } from '@/lib/schema'
+import { baseUrl } from '@/constants'
 
 interface PageProps {
-  params: Promise<{ facultyId: string; departmentId: string; levelId: string; courseId: string }>
+  params: Promise<{
+    facultyId: string
+    departmentId: string
+    levelId: string
+    courseId: string
+  }>
 }
 
 async function getCourseDetailPageData(
@@ -20,7 +27,12 @@ async function getCourseDetailPageData(
   const [deptResult, levelResult, courseResult, cbtResult] = await Promise.all([
     supabase
       .from('departments')
-      .select('full_name')
+      .select(
+        `
+                full_name,
+                faculty:faculty_id(full_name)
+                `,
+      )
       .eq('id', departmentId)
       .eq('faculty_id', facultyId)
       .single(),
@@ -34,19 +46,19 @@ async function getCourseDetailPageData(
       .from('courses')
       .select(
         `
-      id,
-      course_code,
-      course_title,
-      description,
-      resources(
-        id,
-        title,
-        file_type,
-        download_count,
-        upload_date,
-        is_approved
-      )
-    `,
+                id,
+                course_code,
+                course_title,
+                description,
+                resources(
+                id,
+                title,
+                file_type,
+                download_count,
+                upload_date,
+                is_approved
+                )
+                `,
       )
       .eq('id', courseId)
       .single(),
@@ -55,7 +67,9 @@ async function getCourseDetailPageData(
       .select('id')
       .eq('course_id', courseId)
       .eq('is_active', true)
-      .order('created_at', { ascending: false }),
+      .order('created_at', {
+        ascending: false,
+      }),
   ])
 
   const error = deptResult.error || levelResult.error || courseResult.error
@@ -85,7 +99,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   }`
 
   return {
-    title: `${course?.course_title} | ${level?.level_number} lvl - My Campus Library`,
+    title: `${course?.course_code}: ${course?.course_title} | ${level?.level_number} lvl`,
     description,
   }
 }
@@ -94,11 +108,43 @@ export default async function CourseDetailPage(props: PageProps) {
   const params = await props.params
   const { facultyId, departmentId, levelId, courseId } = params
 
-  const { course, cbts } = await getCourseDetailPageData(facultyId, departmentId, levelId, courseId)
+  const { dept, level, course, cbts } = await getCourseDetailPageData(
+    facultyId,
+    departmentId,
+    levelId,
+    courseId,
+  )
+
+  const breadcrumbNode = generateBreadcrumbSchema([
+    {
+      name: 'Faculties',
+      url: `${baseUrl}/browse/faculties`,
+    },
+    {
+      name: dept.faculty?.[0]?.full_name,
+      url: `${baseUrl}/browse/faculties/${facultyId}`,
+    },
+    {
+      name: dept.full_name,
+      url: `${baseUrl}/browse/faculties/${facultyId}/departments/${departmentId}`,
+    },
+    {
+      name: `${level.level_number} Level`,
+      url: `${baseUrl}/browse/faculties/${facultyId}/departments/${departmentId}/levels/${levelId}`,
+    },
+    {
+      name: `${course.course_code}: ${course.course_title}`,
+      url: `${baseUrl}/browse/faculties/${facultyId}/departments/${departmentId}/levels/${levelId}/courses/${courseId}`,
+    },
+  ])
+
+  const jsonLd = createSchema([breadcrumbNode])
 
   const approvedResources = course?.resources?.filter(r => r.is_approved) || []
 
-  const groupedByType: { [key: string]: typeof approvedResources } = {}
+  const groupedByType: {
+    [key: string]: typeof approvedResources
+  } = {}
   approvedResources.forEach(resource => {
     const type = resource.file_type || 'other'
     if (!groupedByType[type]) groupedByType[type] = []
@@ -120,7 +166,9 @@ export default async function CourseDetailPage(props: PageProps) {
   )
 
   const getFileTypeTitle = (type: string) => {
-    const titles: { [key: string]: string } = {
+    const titles: {
+      [key: string]: string
+    } = {
       pdf: 'PDF Files',
       document: 'Documents',
       presentation: 'Presentations',
@@ -135,6 +183,13 @@ export default async function CourseDetailPage(props: PageProps) {
 
   return (
     <main className="flex-1 max-w-7xl mx-auto px-4 py-12 md:px-6">
+      <script
+        id={`breadcrumb-course-${courseId}`}
+        key={`breadcrumb-${facultyId}-${departmentId}-${levelId}-${courseId}`}
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <div className="mb-12">
         <Link
           href={`/browse/faculties/${facultyId}/departments/${departmentId}/levels/${levelId}`}
