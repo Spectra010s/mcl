@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from '@/components/ui/sonner'
 import { SerwistProvider } from './lib/client'
 import WatchupProviderWrapper from '@/components/WatchUpWrapper'
+import QueryProvider from '@/components/providers/query-provider'
 
 import { website } from '@/schemas/website'
 import { organization } from '@/schemas/organization'
@@ -105,9 +106,11 @@ export default function RootLayout({
           apiKey="aba266cb-dabf-4fd2-a53f-1633352a8786"
           baseUrl="https://mycampuslib.vercel.app"
         >
-          <SerwistProvider swUrl="/serwist/sw.js">
-            <LayoutContent>{children}</LayoutContent>
-          </SerwistProvider>
+          <QueryProvider>
+            <SerwistProvider swUrl="/serwist/sw.js">
+              <LayoutContent>{children}</LayoutContent>
+            </SerwistProvider>
+          </QueryProvider>
         </WatchupProviderWrapper>
         <Toaster position="top-center" theme="light" />
         <Analytics />
