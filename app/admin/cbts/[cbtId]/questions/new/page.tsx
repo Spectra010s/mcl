@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { useMutation } from '@tanstack/react-query'
+import * as adminCbtsApi from '@/lib/api/admin/cbts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -18,6 +20,7 @@ import { ArrowLeft, Plus, Trash2, X } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 
+// Local types for form state
 interface Option {
   optionText: string
   isCorrect: boolean
@@ -38,7 +41,6 @@ export default function NewQuestionPage() {
   const params = useParams()
   const cbtId = params.cbtId as string
 
-  const [submitting, setSubmitting] = useState(false)
   const [questions, setQuestions] = useState<Question[]>([
     {
       id: crypto.randomUUID(),
@@ -177,34 +179,29 @@ export default function NewQuestionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitting(true)
+    createMutation.mutate()
+  }
 
-    // Validation
-    for (let i = 0; i < questions.length; i++) {
-      const q = questions[i]
-      const qNum = i + 1
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i]
+        const qNum = i + 1
 
-      if (!q.questionText.trim()) {
-        toast.error(`Question ${qNum} text is required`)
-        setSubmitting(false)
-        return
+        if (!q.questionText.trim()) {
+          throw new Error(`Question ${qNum} text is required`)
+        }
+
+        const validOptions = q.options.filter(opt => opt.optionText.trim() !== '')
+        if (validOptions.length < 2) {
+          throw new Error(`Question ${qNum} needs at least 2 options`)
+        }
+
+        if (!validOptions.some(opt => opt.isCorrect)) {
+          throw new Error(`Please mark a correct answer for Question ${qNum}`)
+        }
       }
 
-      const validOptions = q.options.filter(opt => opt.optionText.trim() !== '')
-      if (validOptions.length < 2) {
-        toast.error(`Question ${qNum} needs at least 2 options`)
-        setSubmitting(false)
-        return
-      }
-
-      if (!validOptions.some(opt => opt.isCorrect)) {
-        toast.error(`Please mark a correct answer for Question ${qNum}`)
-        setSubmitting(false)
-        return
-      }
-    }
-
-    try {
       const questionsToSubmit = questions.map(q => ({
         questionText: q.questionText,
         questionType: q.questionType,
@@ -213,26 +210,16 @@ export default function NewQuestionPage() {
         options: q.options.filter(opt => opt.optionText.trim() !== ''),
       }))
 
-      const response = await fetch(`/api/admin/cbts/${cbtId}/questions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(questionsToSubmit),
-      })
-
-      if (response.ok) {
-        toast.success(`${questions.length} question(s) added successfully`)
-        router.push(`/admin/cbts/${cbtId}/questions`)
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to add questions')
-      }
-    } catch (error) {
-      console.error('Error adding questions:', error)
-      toast.error('Failed to add questions')
-    } finally {
-      setSubmitting(false)
-    }
-  }
+      await adminCbtsApi.createAdminQuestions(cbtId, questionsToSubmit)
+    },
+    onSuccess: () => {
+      toast.success(`${questions.length} question(s) added successfully`)
+      router.push(`/admin/cbts/${cbtId}/questions`)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to add questions')
+    },
+  })
 
   return (
     <div className="min-h-screen bg-background">
@@ -252,10 +239,10 @@ export default function NewQuestionPage() {
             <Button
               type="button"
               onClick={handleSubmit}
-              disabled={submitting || questions.some(q => !q.questionText)}
+              disabled={createMutation.isPending || questions.some(q => !q.questionText)}
               className="bg-primary hover:bg-primary/90"
             >
-              {submitting
+              {createMutation.isPending
                 ? 'Creating...'
                 : `Create ${questions.length} Question${questions.length > 1 ? 's' : ''}`}
             </Button>
@@ -430,9 +417,9 @@ export default function NewQuestionPage() {
             type="button"
             className="px-8 h-12 text-lg"
             onClick={handleSubmit}
-            disabled={submitting || questions.some(q => !q.questionText)}
+            disabled={createMutation.isPending || questions.some(q => !q.questionText)}
           >
-            {submitting
+            {createMutation.isPending
               ? 'Creating...'
               : `Create ${questions.length} Question${questions.length > 1 ? 's' : ''}`}
           </Button>

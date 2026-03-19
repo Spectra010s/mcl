@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import * as adminCbtsApi from '@/lib/api/admin/cbts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -19,97 +21,59 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
-interface QuestionOption {
-  id: number
-  option_text: string
-  is_correct: boolean
-  order_index: number
-}
-
-interface Question {
-  id: number
-  question_text: string
-  question_type: 'mcq' | 'boolean'
-  points: number
-  order_index: number
-  explanation: string | null
-  question_options: QuestionOption[]
-}
-
-interface CBT {
-  id: number
-  title: string
-  courses: {
-    course_code: string
-    course_title: string
-  }
-}
+// Types are now handled by adminCbtsApi
 
 export default function QuestionsPage() {
   const params = useParams()
   const cbtId = params.cbtId as string
 
-  const [cbt, setCbt] = useState<CBT | null>(null)
-  const [questions, setQuestions] = useState<Question[]>([])
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null)
-  const [importing, setImporting] = useState(false)
+  const [questionToDelete, setQuestionToDelete] = useState<adminCbtsApi.Question | null>(null)
 
-  const fetchData = async () => {
-    setLoading(true)
-    try {
-      const [cbtRes, questionsRes] = await Promise.all([
-        fetch(`/api/admin/cbts/${cbtId}`, {
-          cache: 'no-store',
-        }),
-        fetch(`/api/admin/cbts/${cbtId}/questions`, {
-          cache: 'no-store',
-        }),
-      ])
+  const { data: cbt, isLoading: isLoadingCbt } = useQuery<adminCbtsApi.CBT>({
+    queryKey: ['admin', 'cbts', cbtId],
+    queryFn: () => adminCbtsApi.fetchAdminCBT(cbtId),
+  })
 
-      if (cbtRes.ok) {
-        const cbtData = await cbtRes.json()
-        setCbt(cbtData)
+  const { data: questions = [], isLoading: isLoadingQuestions } = useQuery<adminCbtsApi.Question[]>(
+    {
+      queryKey: ['admin', 'cbts', cbtId, 'questions'],
+      queryFn: () => adminCbtsApi.fetchAdminQuestions(cbtId),
+    },
+  )
+
+  const deleteMutation = useMutation({
+    mutationFn: (questionId: number) => adminCbtsApi.deleteAdminQuestion(cbtId, questionId),
+    onSuccess: () => {
+      toast.success('Question deleted successfully')
+      setDeleteDialogOpen(false)
+      setQuestionToDelete(null)
+      queryClient.invalidateQueries({ queryKey: ['admin', 'cbts', cbtId, 'questions'] })
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete question')
+    },
+  })
+
+  const importMutation = useMutation({
+    mutationFn: (content: string) => adminCbtsApi.importAdminQuestions(cbtId, content),
+    onSuccess: (result: { count: number }) => {
+      toast.success(`Successfully imported ${result.count} questions`)
+      queryClient.invalidateQueries({ queryKey: ['admin', 'cbts', cbtId, 'questions'] })
+    },
+    onError: (error: Error & { details?: string[] }) => {
+      if (error.details && error.details.length > 0) {
+        toast.error(`${error.message}: ${error.details[0]} (and ${error.details.length - 1} more)`)
+      } else {
+        toast.error(error.message || 'Import failed')
       }
-
-      if (questionsRes.ok) {
-        const questionsData = await questionsRes.json()
-        setQuestions(questionsData)
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error)
-      toast.error('Failed to load questions')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchData()
-  }, [cbtId])
+    },
+  })
 
   const handleDelete = async () => {
     if (!questionToDelete) return
-
-    try {
-      const response = await fetch(`/api/admin/cbts/${cbtId}/questions/${questionToDelete.id}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        toast.success('Question deleted successfully')
-        await fetchData()
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to delete question')
-      }
-
-      setDeleteDialogOpen(false)
-      setQuestionToDelete(null)
-    } catch (error) {
-      console.error('Error deleting question:', error)
-    }
+    deleteMutation.mutate(questionToDelete.id)
   }
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,55 +86,27 @@ export default function QuestionsPage() {
       return
     }
 
-    setImporting(true)
     const reader = new FileReader()
 
     reader.onload = async event => {
       const content = event.target?.result as string
       try {
-        const response = await fetch(`/api/admin/cbts/${cbtId}/questions/import`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            content,
-          }),
-        })
-
-        const result = await response.json()
-
-        if (response.ok) {
-          toast.success(`Successfully imported ${result.count} questions`)
-          await fetchData()
-        } else {
-          if (result.details) {
-            console.error('Import validation errors:', result.details)
-            toast.error(
-              `${result.error}: ${result.details[0]} (and ${result.details.length - 1} more)`,
-            )
-          } else {
-            toast.error(result.error || 'Import failed')
-          }
-        }
+        importMutation.mutate(content)
       } catch (error) {
         console.error('Import error:', error)
-        toast.error('Failed to connect to the server')
       } finally {
-        setImporting(false)
         e.target.value = ''
       }
     }
 
     reader.onerror = () => {
       toast.error('Failed to read file')
-      setImporting(false)
     }
 
     reader.readAsText(file)
   }
 
-  if (loading) {
+  if (isLoadingCbt || isLoadingQuestions) {
     return <div className="flex items-center justify-center min-h-screen">Loading questions...</div>
   }
 
@@ -199,17 +135,17 @@ export default function QuestionsPage() {
                   onChange={handleImport}
                   className="hidden"
                   id="sqf-upload"
-                  disabled={importing}
+                  disabled={importMutation.isPending}
                 />
                 <Button
                   variant="outline"
                   asChild={false}
-                  disabled={importing}
+                  disabled={importMutation.isPending}
                   onClick={() => document.getElementById('sqf-upload')?.click()}
                 >
                   <div className="flex items-center">
                     <Upload className="w-4 h-4 mr-2" />
-                    {importing ? 'Importing...' : 'Bulk Import (.sqf)'}
+                    {importMutation.isPending ? 'Importing...' : 'Bulk Import (.sqf)'}
                   </div>
                 </Button>
               </div>
@@ -314,7 +250,9 @@ export default function QuestionsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setQuestionToDelete(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import * as adminCbtsApi from '@/lib/api/admin/cbts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -18,6 +20,7 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 
+// Types are now handled by adminCbtsApi or common admin types
 interface Faculty {
   id: number
   full_name: string
@@ -41,14 +44,6 @@ interface Course {
 
 export default function NewCBTPage() {
   const router = useRouter()
-  const [faculties, setFaculties] = useState<Faculty[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [levels, setLevels] = useState<Level[]>([])
-  const [courses, setCourses] = useState<Course[]>([])
-
-  const [isLoadingPage, setIsLoadingPage] = useState(true)
-  const [isFetching, setIsFetching] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
 
   const [selectedFaculty, setSelectedFaculty] = useState<string>('')
   const [selectedDepartment, setSelectedDepartment] = useState<string>('')
@@ -63,129 +58,91 @@ export default function NewCBTPage() {
     questionLimit: '',
   })
 
-  useEffect(() => {
-    const fetchFaculties = async () => {
-      setIsLoadingPage(true)
-      try {
-        const response = await fetch('/api/admin/faculties', { cache: 'no-store' })
-        if (response.ok) {
-          const data = await response.json()
-          setFaculties(data)
-        }
-      } catch (error) {
-        console.error('Error fetching faculties:', error)
-        toast.error('Failed to load faculties')
-      } finally {
-        setIsLoadingPage(false)
-      }
-    }
-    fetchFaculties()
-  }, [])
+  const { data: faculties = [], isLoading: isLoadingFaculties } = useQuery<Faculty[]>({
+    queryKey: ['admin', 'faculties'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/faculties', { cache: 'no-store' })
+      if (!response.ok) throw new Error('Failed to load faculties')
+      return response.json()
+    },
+  })
+
+  const { data: departments = [], isFetching: isFetchingDepartments } = useQuery<Department[]>({
+    queryKey: ['admin', 'faculties', selectedFaculty, 'departments'],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/faculties/${selectedFaculty}/departments`)
+      if (!response.ok) throw new Error('Failed to load departments')
+      const data = await response.json()
+      return data.departments || []
+    },
+    enabled: !!selectedFaculty,
+  })
+
+  const { data: levels = [], isFetching: isFetchingLevels } = useQuery<Level[]>({
+    queryKey: ['admin', 'departments', selectedDepartment, 'levels'],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/departments/${selectedDepartment}/levels`)
+      if (!response.ok) throw new Error('Failed to load levels')
+      const data = await response.json()
+      return data.levels || []
+    },
+    enabled: !!selectedDepartment,
+  })
+
+  const { data: courses = [], isFetching: isFetchingCourses } = useQuery<Course[]>({
+    queryKey: ['admin', 'levels', selectedLevel, 'courses'],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/levels/${selectedLevel}/courses`)
+      if (!response.ok) throw new Error('Failed to load courses')
+      const { courses } = await response.json()
+      return courses || []
+    },
+    enabled: !!selectedLevel,
+  })
 
   const handleFacultyChange = async (facultyId: string) => {
     setSelectedFaculty(facultyId)
     setSelectedDepartment('')
     setSelectedLevel('')
     setFormData(prev => ({ ...prev, courseId: '' }))
-    setDepartments([])
-    setLevels([])
-    setCourses([])
-
-    if (facultyId) {
-      setIsFetching(true)
-      try {
-        const response = await fetch(`/api/admin/faculties/${facultyId}/departments`)
-        if (response.ok) {
-          const data = await response.json()
-          setDepartments(data.departments || [])
-        }
-      } catch (error) {
-        console.error('Error fetching departments:', error)
-      } finally {
-        setIsFetching(false)
-      }
-    }
   }
 
   const handleDeptChange = async (deptId: string) => {
     setSelectedDepartment(deptId)
     setSelectedLevel('')
     setFormData(prev => ({ ...prev, courseId: '' }))
-    setLevels([])
-    setCourses([])
-
-    if (deptId) {
-      setIsFetching(true)
-      try {
-        const response = await fetch(`/api/admin/departments/${deptId}/levels`)
-        if (response.ok) {
-          const data = await response.json()
-          setLevels(data.levels || [])
-        }
-      } catch (error) {
-        console.error('Error fetching levels:', error)
-      } finally {
-        setIsFetching(false)
-      }
-    }
   }
 
   const handleLevelChange = async (levelId: string) => {
     setSelectedLevel(levelId)
     setFormData(prev => ({ ...prev, courseId: '' }))
-    setCourses([])
-
-    if (levelId) {
-      setIsFetching(true)
-      try {
-        const response = await fetch(`/api/admin/levels/${levelId}/courses`)
-        if (response.ok) {
-          const { courses } = await response.json()
-          setCourses(courses || [])
-        }
-      } catch (error) {
-        console.error('Error fetching courses:', error)
-      } finally {
-        setIsFetching(false)
-      }
-    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitting(true)
-
-    try {
-      const response = await fetch('/api/admin/cbts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courseId: parseInt(formData.courseId),
-          title: formData.title,
-          description: formData.description || null,
-          timeLimitMinutes: formData.timeLimitMinutes ? parseInt(formData.timeLimitMinutes) : null,
-          passingScore: parseInt(formData.passingScore),
-          questionLimit: formData.questionLimit ? parseInt(formData.questionLimit) : null,
-        }),
-      })
-
-      if (response.ok) {
-        const cbt = await response.json()
-        toast.success('CBT created successfully')
-        router.push(`/admin/cbts/${cbt.id}/questions`)
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to create CBT')
-      }
-    } catch (error) {
-      console.error('Error creating CBT:', error)
-      toast.error('Failed to create CBT')
-    } finally {
-      setSubmitting(false)
-    }
+    createMutation.mutate()
   }
 
-  if (isLoadingPage) {
+  const createMutation = useMutation({
+    mutationFn: () =>
+      adminCbtsApi.createAdminCBT({
+        courseId: parseInt(formData.courseId),
+        title: formData.title,
+        description: formData.description || null,
+        timeLimitMinutes: formData.timeLimitMinutes ? parseInt(formData.timeLimitMinutes) : null,
+        passingScore: parseInt(formData.passingScore),
+        questionLimit: formData.questionLimit ? parseInt(formData.questionLimit) : null,
+      }),
+    onSuccess: (cbt: { id: number }) => {
+      toast.success('CBT created successfully')
+      router.push(`/admin/cbts/${cbt.id}/questions`)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create CBT')
+    },
+  })
+
+  if (isLoadingFaculties) {
     return <div className="flex items-center justify-center min-h-screen">Loading Page...</div>
   }
 
@@ -250,7 +207,7 @@ export default function NewCBTPage() {
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      {isFetching && !selectedDepartment && (
+                      {isFetchingDepartments && !selectedDepartment && (
                         <div className="flex items-center justify-center py-2">
                           <div className="animate-spin border-2 border-primary/20 border-t-primary rounded-full w-4 h-4" />
                         </div>
@@ -281,7 +238,7 @@ export default function NewCBTPage() {
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      {isFetching && !selectedLevel && selectedDepartment && (
+                      {isFetchingLevels && !selectedLevel && selectedDepartment && (
                         <div className="flex items-center justify-center py-2">
                           <div className="animate-spin border-2 border-primary/20 border-t-primary rounded-full w-4 h-4" />
                         </div>
@@ -308,7 +265,7 @@ export default function NewCBTPage() {
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      {isFetching && !formData.courseId && selectedLevel && (
+                      {isFetchingCourses && !formData.courseId && selectedLevel && (
                         <div className="flex items-center justify-center py-2">
                           <div className="animate-spin border-2 border-primary/20 border-t-primary rounded-full w-4 h-4" />
                         </div>
@@ -392,9 +349,9 @@ export default function NewCBTPage() {
               <div className="flex gap-4 pt-4">
                 <Button
                   type="submit"
-                  disabled={submitting || !formData.courseId || !formData.title}
+                  disabled={createMutation.isPending || !formData.courseId || !formData.title}
                 >
-                  {submitting ? 'Creating...' : 'Create CBT'}
+                  {createMutation.isPending ? 'Creating...' : 'Create CBT'}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => router.back()}>
                   Cancel
