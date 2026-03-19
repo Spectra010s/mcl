@@ -50,7 +50,7 @@ export default function CBTClient({ cbt, attempts: initialAttempts }: CBTClientP
   // Queries
   const { data: attempts = initialAttempts } = useQuery<cbtsApi.Attempt[]>({
     queryKey: ['cbts', cbt.id, 'attempts'],
-    queryFn: () => fetch(`/api/cbts/${cbt.id}/attempts`).then(res => res.json()),
+    queryFn: () => cbtsApi.fetchCBTAttempts(cbt.id),
     initialData: initialAttempts,
   })
 
@@ -192,20 +192,6 @@ export default function CBTClient({ cbt, attempts: initialAttempts }: CBTClientP
   const bestScore =
     completedAttempts.length > 0 ? Math.max(...completedAttempts.map(a => a.score || 0)) : null
 
-  const optimisticallySetAnswer = useCallback(
-    (questionId: number, optionId: number) => {
-      const queryKey = ['cbts', 'attempts', activeAttemptId]
-      queryClient.setQueryData<cbtsApi.AttemptData>(queryKey, previousData => {
-        if (!previousData) return previousData
-        return {
-          ...previousData,
-          answers: { ...previousData.answers, [questionId]: optionId.toString() },
-        }
-      })
-    },
-    [activeAttemptId, queryClient],
-  )
-
   const queueSaveAnswer = useCallback(
     (questionId: number, optionId: number) => {
       pendingAnswerRef.current = { questionId, optionId }
@@ -225,10 +211,18 @@ export default function CBTClient({ cbt, attempts: initialAttempts }: CBTClientP
 
   const handleAnswerClick = useCallback(
     (questionId: number, optionId: number) => {
-      optimisticallySetAnswer(questionId, optionId)
+      // Immediate UI update for responsiveness
+      const queryKey = ['cbts', 'attempts', activeAttemptId]
+      queryClient.setQueryData<cbtsApi.AttemptData>(queryKey, previousData => {
+        if (!previousData) return previousData
+        return {
+          ...previousData,
+          answers: { ...previousData.answers, [questionId]: optionId.toString() },
+        }
+      })
       queueSaveAnswer(questionId, optionId)
     },
-    [optimisticallySetAnswer, queueSaveAnswer],
+    [activeAttemptId, queryClient, queueSaveAnswer],
   )
 
   // Pre-test View
