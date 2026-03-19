@@ -114,3 +114,9 @@ export const fetchCBTReview = async (attemptId: number): Promise<ReviewItem[]> =
   const data = await response.json()
   return data.review
 }
+
+export const fetchCBTAttempts = async (cbtId: number): Promise<Attempt[]> => {
+  const response = await fetch(`/api/cbts/${cbtId}/attempts`)
+  if (!response.ok) throw new Error('Failed to fetch attempts')
+  return response.json()
+}
