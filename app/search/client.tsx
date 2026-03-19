@@ -111,7 +111,6 @@ export default function SearchClient() {
               ? {
                   ...r,
                   isBookmarked: newStatus,
-                  bookmark_count: r.bookmark_count + (newStatus ? 1 : -1),
                 }
               : r,
           ),
