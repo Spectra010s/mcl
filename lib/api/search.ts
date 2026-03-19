@@ -30,13 +30,7 @@ interface DbResource extends Resource {
   user_bookmarks: { user_id: string }[] | null
 }
 
-export const fetchSearchUser = async (): Promise<User | null> => {
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  return user
-}
+// fetchSearchUser removed in favor of @/hooks/useUser
 
 export const recordSearchQuery = async (query: string) => {
   await fetch('/api/search/record', {

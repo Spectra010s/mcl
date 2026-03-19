@@ -17,54 +17,18 @@ import {
   Bug,
   Monitor,
 } from 'lucide-react'
-import { User } from '@supabase/supabase-js'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
+import { useUser } from '@/hooks/useUser'
 
 interface SidebarProps {
   mobileOpen?: boolean
   onMobileClose?: () => void
 }
 
-type UserRole = 'admin' | 'user'
-
-interface DbUser {
-  id: string
-  role: UserRole
-}
-
 export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
-  const [user, setUser] = useState<DbUser | null>(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const { profile: user, isLoading: loading } = useUser()
   const pathname = usePathname()
   const sidebarRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser()
-
-        if (authUser) {
-          const { data: userRole } = await supabase
-            .from('users')
-            .select('id, role')
-            .eq('id', authUser.id)
-            .single()
-
-          setUser(userRole)
-        } else {
-          setUser(null)
-        }
-      } catch (error) {
-        console.error('Error fetching user:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    getUser()
-  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

@@ -11,6 +11,7 @@ import { LogOut, Download, BookmarkPlus, Search } from 'lucide-react'
 import { AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface Resource {
   id: number
@@ -51,7 +52,9 @@ export default function SettingsComponents({
   initialProfile,
 }: SettingsComponentsProps) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const p: Profile = initialProfile
+
   const [fullName, setFullName] = useState(`${p.first_name || ''} ${p.last_name || ''}`.trim())
   const [username, setUsername] = useState(p.username || '')
   const [profileLoading, setProfileLoading] = useState(false)
@@ -98,6 +101,9 @@ export default function SettingsComponents({
         const error = await response.json()
         console.error('Logout failed:', error.message)
       }
+
+      // Invalidate the auth cache to update Header/Sidebar
+      queryClient.invalidateQueries({ queryKey: ['auth', 'user'] })
     } catch (error: unknown) {
       toast.error('Error', {
         description: error instanceof Error ? error.message : 'Logout failed',
