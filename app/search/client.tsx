@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Download, BookmarkPlus, Search, Eye } from 'lucide-react'
 import { toast } from 'sonner'
 import * as searchApi from '@/lib/api/search'
+import { useUser } from '@/hooks/useUser'
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>
 
@@ -22,11 +23,7 @@ export default function SearchClient() {
   const [bookmarkingId, setBookmarkingId] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
-  const { data: user } = useQuery({
-    queryKey: ['auth', 'user'],
-    queryFn: searchApi.fetchSearchUser,
-    staleTime: 5 * 60 * 1000,
-  })
+  const { user } = useUser()
 
   useEffect(() => {
     setSearchQuery(query)
