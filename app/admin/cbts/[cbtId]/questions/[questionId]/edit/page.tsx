@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import * as adminCbtsApi from '@/lib/api/admin/cbts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -18,35 +20,18 @@ import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 
+// Types are now handled by adminCbtsApi
 interface Option {
   optionText: string
   isCorrect: boolean
 }
 
-interface QuestionOption {
-  id: number
-  option_text: string
-  is_correct: boolean
-  order_index: number
-}
-
-interface Question {
-  id: number
-  question_text: string
-  question_type: 'mcq' | 'boolean'
-  points: number
-  explanation: string | null
-  question_options: QuestionOption[]
-}
-
 export default function EditQuestionPage() {
   const router = useRouter()
   const params = useParams()
-  const cbtId = params.id as string
+  const cbtId = params.cbtId as string
   const questionId = params.questionId as string
 
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     questionText: '',
     questionType: 'mcq' as 'mcq' | 'boolean',
@@ -57,46 +42,71 @@ export default function EditQuestionPage() {
   const [options, setOptions] = useState<Option[]>([])
   const [booleanAnswer, setBooleanAnswer] = useState<'true' | 'false'>('true')
 
+  const formInitializedRef = useRef(false)
+
+  const { data: question, isLoading } = useQuery<adminCbtsApi.Question>({
+    queryKey: ['admin', 'cbts', cbtId, 'questions', questionId],
+    queryFn: () => adminCbtsApi.fetchAdminQuestion(cbtId, questionId),
+  })
+
   useEffect(() => {
-    const fetchQuestion = async () => {
-      try {
-        const response = await fetch(`/api/admin/cbts/${cbtId}/questions/${questionId}`, {
-          cache: 'no-store',
-        })
-        if (response.ok) {
-          const question: Question = await response.json()
-          setFormData({
-            questionText: question.question_text,
-            questionType: question.question_type,
-            points: question.points.toString(),
-            explanation: question.explanation || '',
-          })
+    if (!question || formInitializedRef.current) return
+    setFormData({
+      questionText: question.question_text,
+      questionType: question.question_type,
+      points: question.points.toString(),
+      explanation: question.explanation || '',
+    })
 
-          const loadedOptions = question.question_options
-            .sort((a, b) => a.order_index - b.order_index)
-            .map(opt => ({
-              optionText: opt.option_text,
-              isCorrect: opt.is_correct,
-            }))
-          setOptions(loadedOptions)
+    const loadedOptions = question.question_options
+      .sort((a, b) => a.order_index - b.order_index)
+      .map(opt => ({
+        optionText: opt.option_text,
+        isCorrect: opt.is_correct,
+      }))
+    setOptions(loadedOptions)
 
-          if (question.question_type === 'boolean') {
-            const trueOption = loadedOptions.find(opt => opt.optionText === 'True')
-            setBooleanAnswer(trueOption?.isCorrect ? 'true' : 'false')
-          }
-        } else {
-          toast.error('Question not found')
-          router.push(`/admin/cbts/${cbtId}/questions`)
-        }
-      } catch (error) {
-        console.error('Error fetching question:', error)
-        toast.error('Failed to load question')
-      } finally {
-        setLoading(false)
-      }
+    if (question.question_type === 'boolean') {
+      const trueOption = loadedOptions.find(opt => opt.optionText === 'True')
+      setBooleanAnswer(trueOption?.isCorrect ? 'true' : 'false')
     }
-    fetchQuestion()
-  }, [cbtId, questionId, router])
+
+    formInitializedRef.current = true
+  }, [question])
+
+  useEffect(() => {
+    if (isLoading || question) return
+    toast.error('Question not found')
+    router.push(`/admin/cbts/${cbtId}/questions`)
+  }, [cbtId, isLoading, question, router])
+
+  const updateMutation = useMutation({
+    mutationFn: () => {
+      const validOptions = options.filter(opt => opt.optionText.trim() !== '')
+      if (validOptions.length < 2) {
+        throw new Error('Please provide at least 2 options')
+      }
+
+      if (!validOptions.some(opt => opt.isCorrect)) {
+        throw new Error('Please mark one option as correct')
+      }
+
+      return adminCbtsApi.updateAdminQuestion(cbtId, questionId, {
+        questionText: formData.questionText,
+        questionType: formData.questionType,
+        points: parseInt(formData.points),
+        explanation: formData.explanation || null,
+        options: validOptions,
+      })
+    },
+    onSuccess: () => {
+      toast.success('Question updated successfully')
+      router.push(`/admin/cbts/${cbtId}/questions`)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update question')
+    },
+  })
 
   const handleQuestionTypeChange = (type: 'mcq' | 'boolean') => {
     setFormData({ ...formData, questionType: type })
@@ -157,50 +167,10 @@ export default function EditQuestionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitting(true)
-
-    const validOptions = options.filter(opt => opt.optionText.trim() !== '')
-    if (validOptions.length < 2) {
-      toast.error('Please provide at least 2 options')
-      setSubmitting(false)
-      return
-    }
-
-    if (!validOptions.some(opt => opt.isCorrect)) {
-      toast.error('Please mark one option as correct')
-      setSubmitting(false)
-      return
-    }
-
-    try {
-      const response = await fetch(`/api/admin/cbts/${cbtId}/questions/${questionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          questionText: formData.questionText,
-          questionType: formData.questionType,
-          points: parseInt(formData.points),
-          explanation: formData.explanation || null,
-          options: validOptions,
-        }),
-      })
-
-      if (response.ok) {
-        toast.success('Question updated successfully')
-        router.push(`/admin/cbts/${cbtId}/questions`)
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to update question')
-      }
-    } catch (error) {
-      console.error('Error updating question:', error)
-      toast.error('Failed to update question')
-    } finally {
-      setSubmitting(false)
-    }
+    updateMutation.mutate()
   }
 
-  if (loading) {
+  if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading question...</div>
   }
 
@@ -346,8 +316,8 @@ export default function EditQuestionPage() {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <Button type="submit" disabled={submitting || !formData.questionText}>
-                  {submitting ? 'Saving...' : 'Save Changes'}
+                <Button type="submit" disabled={updateMutation.isPending || !formData.questionText}>
+                  {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => router.back()}>
                   Cancel

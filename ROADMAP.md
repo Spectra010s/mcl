@@ -14,6 +14,10 @@ This document outlines the high-priority future features for the platform.
 - [ ] Advanced search filters (Academic Level, Department)
 - [ ] Resource recommendation engine
 - [ ] Automated tagging for uploaded materials
+- [ ] **CBT Practice Mode**
+  - Immediate feedback after each question.
+  - Optional explanations and hints.
+  - Non-graded attempts that don't affect pass/fail stats.
 
 ## Recently Completed
 
