@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import * as adminCbtsApi from '@/lib/api/admin/cbts'
@@ -33,53 +33,70 @@ export default function EditQuestionPage() {
   const cbtId = params.cbtId as string
   const questionId = params.questionId as string
 
-  const [formData, setFormData] = useState({
-    questionText: '',
-    questionType: 'mcq' as 'mcq' | 'boolean',
-    points: '1',
-    explanation: '',
-  })
-
-  const [options, setOptions] = useState<Option[]>([])
-  const [booleanAnswer, setBooleanAnswer] = useState<'true' | 'false'>('true')
-
-  const formInitializedRef = useRef(false)
-
   const { data: question, isLoading } = useQuery<adminCbtsApi.Question>({
     queryKey: ['admin', 'cbts', cbtId, 'questions', questionId],
     queryFn: () => adminCbtsApi.fetchAdminQuestion(cbtId, questionId),
   })
 
   useEffect(() => {
-    if (!question || formInitializedRef.current) return
-    setFormData({
-      questionText: question.question_text,
-      questionType: question.question_type,
-      points: question.points.toString(),
-      explanation: question.explanation || '',
-    })
-
-    const loadedOptions = question.question_options
-      .sort((a, b) => a.order_index - b.order_index)
-      .map(opt => ({
-        optionText: opt.option_text,
-        isCorrect: opt.is_correct,
-      }))
-    setOptions(loadedOptions)
-
-    if (question.question_type === 'boolean') {
-      const trueOption = loadedOptions.find(opt => opt.optionText === 'True')
-      setBooleanAnswer(trueOption?.isCorrect ? 'true' : 'false')
-    }
-
-    formInitializedRef.current = true
-  }, [question])
-
-  useEffect(() => {
     if (isLoading || question) return
     toast.error('Question not found')
     router.push(`/admin/cbts/${cbtId}/questions`)
   }, [cbtId, isLoading, question, router])
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <Loader size={32} className="text-primary" />
+        <p className="text-muted-foreground animate-pulse">Loading question...</p>
+      </div>
+    )
+  }
+
+  if (!question) {
+    return null
+  }
+
+  return (
+    <EditQuestionForm
+      key={question.id}
+      question={question}
+      cbtId={cbtId}
+      questionId={questionId}
+    />
+  )
+}
+
+function EditQuestionForm({
+  question,
+  cbtId,
+  questionId,
+}: {
+  question: adminCbtsApi.Question
+  cbtId: string
+  questionId: string
+}) {
+  const router = useRouter()
+  const [formData, setFormData] = useState(() => ({
+    questionText: question.question_text,
+    questionType: question.question_type,
+    points: question.points.toString(),
+    explanation: question.explanation || '',
+  }))
+
+  const initialOptions = question.question_options
+    .sort((a, b) => a.order_index - b.order_index)
+    .map(opt => ({
+      optionText: opt.option_text,
+      isCorrect: opt.is_correct,
+    }))
+
+  const [options, setOptions] = useState<Option[]>(() => initialOptions)
+  const [booleanAnswer, setBooleanAnswer] = useState<'true' | 'false'>(() => {
+    if (question.question_type !== 'boolean') return 'true'
+    const trueOption = initialOptions.find(opt => opt.optionText === 'True')
+    return trueOption?.isCorrect ? 'true' : 'false'
+  })
 
   const updateMutation = useMutation({
     mutationFn: () => {
@@ -169,15 +186,6 @@ export default function EditQuestionPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     updateMutation.mutate()
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <Loader size={32} className="text-primary" />
-        <p className="text-muted-foreground animate-pulse">Loading question...</p>
-      </div>
-    )
   }
 
   return (

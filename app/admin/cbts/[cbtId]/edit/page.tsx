@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import * as adminCbtsApi from '@/lib/api/admin/cbts'
@@ -21,38 +21,42 @@ export default function EditCBTPage() {
   const params = useParams()
   const cbtId = params.cbtId as string
 
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    timeLimitMinutes: '',
-    passingScore: '70',
-    questionLimit: '',
-  })
-
-  const formInitializedRef = useRef(false)
-
   const { data: cbt, isLoading } = useQuery<adminCbtsApi.CBT>({
     queryKey: ['admin', 'cbts', cbtId],
     queryFn: () => adminCbtsApi.fetchAdminCBT(cbtId),
   })
 
   useEffect(() => {
-    if (!cbt || formInitializedRef.current) return
-    setFormData({
-      title: cbt.title,
-      description: cbt.description || '',
-      timeLimitMinutes: cbt.time_limit_minutes?.toString() || '',
-      passingScore: cbt.passing_score.toString(),
-      questionLimit: cbt.question_limit?.toString() || '',
-    })
-    formInitializedRef.current = true
-  }, [cbt])
-
-  useEffect(() => {
     if (isLoading || cbt) return
     toast.error('CBT not found')
     router.push('/admin/cbts')
   }, [cbt, isLoading, router])
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <Loader size={32} className="text-primary" />
+        <p className="text-muted-foreground animate-pulse">Loading CBT details...</p>
+      </div>
+    )
+  }
+
+  if (!cbt) {
+    return null
+  }
+
+  return <EditCBTForm key={cbt.id} cbt={cbt} cbtId={cbtId} />
+}
+
+function EditCBTForm({ cbt, cbtId }: { cbt: adminCbtsApi.CBT; cbtId: string }) {
+  const router = useRouter()
+  const [formData, setFormData] = useState(() => ({
+    title: cbt.title,
+    description: cbt.description || '',
+    timeLimitMinutes: cbt.time_limit_minutes?.toString() || '',
+    passingScore: cbt.passing_score.toString(),
+    questionLimit: cbt.question_limit?.toString() || '',
+  }))
 
   const updateMutation = useMutation({
     mutationFn: () =>
@@ -75,19 +79,6 @@ export default function EditCBTPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     updateMutation.mutate()
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <Loader size={32} className="text-primary" />
-        <p className="text-muted-foreground animate-pulse">Loading CBT details...</p>
-      </div>
-    )
-  }
-
-  if (!cbt) {
-    return null
   }
 
   return (
