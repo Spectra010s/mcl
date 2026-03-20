@@ -43,6 +43,33 @@ interface CBT {
   courses: Course
 }
 
+interface RawAcademicLevel {
+  level_number: number
+  departments: {
+    short_name: string
+    full_name: string
+  } | {
+    short_name: string
+    full_name: string
+  }[]
+}
+
+interface RawCourse {
+  id: number
+  course_code: string
+  course_title: string
+  academic_levels: RawAcademicLevel | RawAcademicLevel[]
+}
+
+interface RawCBT {
+  id: number
+  title: string
+  description: string | null
+  time_limit_minutes: number | null
+  passing_score: number
+  courses: RawCourse | RawCourse[]
+}
+
 async function getCBTs() {
   const supabase = await createClient()
 
@@ -76,7 +103,9 @@ async function getCBTs() {
 
   if (error) throw error
 
-  return cbts.map((cbt: any) => {
+  const rawCbts = (cbts ?? []) as RawCBT[]
+
+  return rawCbts.map((cbt: RawCBT) => {
     const course = Array.isArray(cbt.courses) ? cbt.courses[0] : cbt.courses
     const academicLevel = Array.isArray(course.academic_levels)
       ? course.academic_levels[0]

@@ -6,6 +6,20 @@ interface RouteParams {
   params: Promise<{ cbtId: string }>
 }
 
+interface QuestionOptionPayload {
+  optionText: string
+  isCorrect: boolean
+}
+
+interface QuestionPayload {
+  questionText: string
+  questionType: string
+  points?: number
+  explanation?: string | null
+  shuffleOptions?: boolean
+  options: QuestionOptionPayload[]
+}
+
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     const { cbtId } = await params
@@ -75,7 +89,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const body = await request.json()
+    const body = (await request.json()) as QuestionPayload | QuestionPayload[]
     const questionsArray = Array.isArray(body) ? body : [body]
 
     if (questionsArray.length === 0) {
@@ -96,7 +110,7 @@ export async function POST(request: Request, { params }: RouteParams) {
           { status: 400 },
         )
       }
-      const hasCorrectAnswer = q.options.some((opt: { isCorrect: boolean }) => opt.isCorrect)
+      const hasCorrectAnswer = q.options.some(opt => opt.isCorrect)
       if (!hasCorrectAnswer) {
         return NextResponse.json(
           { error: 'At least one option must be marked as correct for all questions' },
@@ -114,7 +128,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       .limit(1)
       .maybeSingle()
 
-    let nextOrderIndex = lastQuestion ? lastQuestion.order_index + 1 : 0
+    const nextOrderIndex = lastQuestion ? lastQuestion.order_index + 1 : 0
 
     // Prepare questions for insertion
     const questionsToInsert = questionsArray.map((q, index) => ({
@@ -137,19 +151,22 @@ export async function POST(request: Request, { params }: RouteParams) {
     if (!insertedQuestions) throw new Error('Failed to insert questions')
 
     // Prepare all options for all questions
-    const allOptionsToInsert: any[] = []
+    const allOptionsToInsert: {
+      question_id: number
+      option_text: string
+      is_correct: boolean
+      order_index: number
+    }[] = []
     insertedQuestions.forEach((question, qIndex) => {
       const originalQuestion = questionsArray[qIndex]
-      originalQuestion.options.forEach(
-        (opt: { optionText: string; isCorrect: boolean }, oIndex: number) => {
-          allOptionsToInsert.push({
-            question_id: question.id,
-            option_text: opt.optionText,
-            is_correct: opt.isCorrect,
-            order_index: oIndex,
-          })
-        },
-      )
+      originalQuestion.options.forEach((opt, oIndex) => {
+        allOptionsToInsert.push({
+          question_id: question.id,
+          option_text: opt.optionText,
+          is_correct: opt.isCorrect,
+          order_index: oIndex,
+        })
+      })
     })
 
     // Insert all options
