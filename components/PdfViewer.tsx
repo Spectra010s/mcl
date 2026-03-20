@@ -65,23 +65,22 @@ export default function PdfViewer({ url }: PdfViewerProps) {
 
         try {
           await renderTask.promise
-        } catch (renderErr: any) {
-          if (
-            renderErr.name === 'RenderingCancelledException' ||
-            renderErr.message?.includes('cancelled')
-          ) {
+        } catch (renderErr) {
+          const err = renderErr as Error & { name?: string }
+          if (err.name === 'RenderingCancelledException' || err.message?.includes('cancelled')) {
             // Safe exit on cancellation
           } else {
-            throw renderErr
+            throw err
           }
         } finally {
           renderTaskRef.current = null
         }
-      } catch (err: any) {
-        if (err.name === 'RenderingCancelledException') {
+      } catch (err) {
+        const error = err as Error & { name?: string }
+        if (error.name === 'RenderingCancelledException') {
           // Handled above
         } else {
-          console.error('Error rendering page:', err)
+          console.error('Error rendering page:', error)
           setError('Failed to render page')
         }
       } finally {
@@ -105,7 +104,7 @@ export default function PdfViewer({ url }: PdfViewerProps) {
         setPageNumber(1)
         setScale(defaultScale)
         await renderPage(1, loadedPdf, defaultScale)
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error loading PDF:', err)
         setError('Failed to load PDF. Please try again later.')
       } finally {

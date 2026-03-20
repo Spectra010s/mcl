@@ -2,6 +2,48 @@ import { MetadataRoute } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { baseUrl } from '@/constants'
 
+interface FacultyRoutes {
+  id: number
+  updated_at: string
+}
+
+interface DepartmentRoutes {
+  id: number
+  faculty_id: number
+  updated_at: string
+}
+
+interface LevelRoutes {
+  id: number
+  department_id: number
+  updated_at: string
+  departments: {
+    faculty_id: number
+  } | null
+}
+
+interface CourseRoutes {
+  id: number
+  academic_level_id: number
+  updated_at: string
+  academic_levels: {
+    department_id: number
+    departments: {
+      faculty_id: number
+    } | null
+  } | null
+}
+
+interface CBTRoutes {
+  id: number
+  updated_at: string
+}
+
+interface ResourceRoutes {
+  id: string
+  updated_at: string
+}
+
 export const revalidate = 86400
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -78,28 +120,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     supabase.from('resources').select('id, updated_at').eq('is_approved', true).limit(2000),
   ])
 
-  const facultyRoutes = (faculties || []).map(f => ({
+  const facultyRoutes = (faculties as unknown as FacultyRoutes[] || []).map(f => ({
     url: `${baseUrl}/browse/faculties/${f.id}`,
     lastModified: new Date(f.updated_at),
     changeFrequency: 'weekly' as const,
     priority: 0.7,
   }))
 
-  const departmentRoutes = (departments || []).map(d => ({
+  const departmentRoutes = (departments as unknown as DepartmentRoutes[] || []).map(d => ({
     url: `${baseUrl}/browse/faculties/${d.faculty_id}/departments/${d.id}`,
     lastModified: new Date(d.updated_at),
     changeFrequency: 'weekly' as const,
     priority: 0.6,
   }))
 
-  const levelRoutes = (levels || []).map((l: any) => ({
+  const levelRoutes = (levels as unknown as LevelRoutes[] || []).map(l => ({
     url: `${baseUrl}/browse/faculties/${l.departments?.faculty_id}/departments/${l.department_id}/levels/${l.id}`,
     lastModified: new Date(l.updated_at),
     changeFrequency: 'weekly' as const,
     priority: 0.5,
   }))
 
-  const courseRoutes = (courses || []).map((c: any) => {
+  const courseRoutes = (courses as unknown as CourseRoutes[] || []).map(c => {
     const level = c.academic_levels
     const facultyId = level?.departments?.faculty_id
     return {
@@ -110,14 +152,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   })
 
-  const cbtRoutes = (cbts || []).map(c => ({
+  const cbtRoutes = (cbts as unknown as CBTRoutes[] || []).map(c => ({
     url: `${baseUrl}/cbts/${c.id}`,
     lastModified: new Date(c.updated_at),
     changeFrequency: 'daily' as const,
     priority: 0.6,
   }))
 
-  const resourceRoutes = (resources || []).map(r => ({
+  const resourceRoutes = (resources as unknown as ResourceRoutes[] || []).map(r => ({
     url: `${baseUrl}/resource/${r.id}`,
     lastModified: new Date(r.updated_at),
     changeFrequency: 'daily' as const,

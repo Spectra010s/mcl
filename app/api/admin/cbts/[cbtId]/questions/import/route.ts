@@ -62,7 +62,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       .limit(1)
       .maybeSingle()
 
-    let nextOrderIndex = lastQuestion ? lastQuestion.order_index + 1 : 0
+    const nextOrderIndex = lastQuestion ? lastQuestion.order_index + 1 : 0
 
     // Prepare questions for insertion
     const questionsToInsert = questionsArray.map((q, index) => ({
@@ -90,7 +90,12 @@ export async function POST(request: Request, { params }: RouteParams) {
     )
 
     // Prepare all options for all questions
-    const allOptionsToInsert: any[] = []
+    const allOptionsToInsert: {
+      question_id: number
+      option_text: string
+      is_correct: boolean
+      order_index: number
+    }[] = []
     sortedInsertedQuestions.forEach((question, qIndex) => {
       const originalQuestion = questionsArray[qIndex]
       originalQuestion.options.forEach((opt, oIndex) => {
