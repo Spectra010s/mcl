@@ -1,12 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import * as adminCbtsApi from '@/lib/api/admin/cbts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Plus, ArrowLeft, Trash2, Edit, FileQuestion } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { Loader } from '@/components/ui/loader'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,109 +21,69 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
-interface Course {
-  id: number
-  course_code: string
-  course_title: string
-  academic_levels: {
-    level_number: number
-    departments: {
-      short_name: string
-      full_name: string
-    }
-  }
-}
-
-interface CBT {
-  id: number
-  title: string
-  description: string | null
-  time_limit_minutes: number | null
-  passing_score: number
-  is_active: boolean
-  created_at: string
-  courses: Course
-  _count: {
-    questions: number
-  }
-}
+// Types are now imported from adminCbtsApi
 
 export default function AdminCBTsPage() {
-  const [cbts, setCbts] = useState<CBT[]>([])
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [cbtToDelete, setCbtToDelete] = useState<CBT | null>(null)
+  const [cbtToDelete, setCbtToDelete] = useState<adminCbtsApi.CBT | null>(null)
+  const [pendingToggleId, setPendingToggleId] = useState<number | null>(null)
 
-  const fetchCBTs = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch('/api/admin/cbts', { cache: 'no-store' })
-      if (!response.ok) throw new Error('Failed to fetch CBTs')
-      const data = await response.json()
-      setCbts(data)
-    } catch (error) {
-      console.error(error)
-      toast.error('Failed to load CBTs')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data: cbts = [], isLoading } = useQuery<adminCbtsApi.CBT[]>({
+    queryKey: ['admin', 'cbts'],
+    queryFn: adminCbtsApi.fetchAdminCBTs,
+  })
 
-  useEffect(() => {
-    fetchCBTs()
-  }, [])
-
-  const handleDelete = async () => {
-    if (!cbtToDelete) return
-
-    try {
-      const response = await fetch(`/api/admin/cbts/${cbtToDelete.id}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
+  const deleteMutation = useMutation({
+    mutationFn: adminCbtsApi.deleteAdminCBT,
+    onSuccess: () => {
+      if (cbtToDelete) {
         toast.success('Success', {
           description: `${cbtToDelete.title} deleted successfully`,
         })
-      } else {
-        const error = await response.json()
-        toast.error('Error', {
-          description: error.error || 'Failed to delete CBT',
-        })
       }
-
       setDeleteDialogOpen(false)
       setCbtToDelete(null)
-      await fetchCBTs()
-    } catch (error) {
-      console.error('Error deleting CBT:', error)
-    }
-  }
+      queryClient.invalidateQueries({ queryKey: ['admin', 'cbts'] })
+    },
+    onError: (error: Error) => {
+      toast.error('Error', { description: error.message || 'Failed to delete CBT' })
+    },
+  })
 
-  const handleToggleActive = async (cbt: CBT) => {
-    try {
-      const response = await fetch(`/api/admin/cbts/${cbt.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !cbt.is_active }),
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
+      adminCbtsApi.updateAdminCBT(id, { is_active: !isActive }),
+    onSuccess: (_data, variables) => {
+      toast.success('Success', {
+        description: `CBT ${variables.isActive ? 'deactivated' : 'activated'} successfully`,
       })
+      setPendingToggleId(null)
+      queryClient.invalidateQueries({ queryKey: ['admin', 'cbts'] })
+    },
+    onError: (error: Error) => {
+      setPendingToggleId(null)
+      toast.error('Error', { description: error.message || 'Failed to update CBT' })
+    },
+  })
 
-      if (response.ok) {
-        toast.success('Success', {
-          description: `CBT ${cbt.is_active ? 'deactivated' : 'activated'} successfully`,
-        })
-        await fetchCBTs()
-      } else {
-        const error = await response.json()
-        toast.error('Error', { description: error.error || 'Failed to update CBT' })
-      }
-    } catch (error) {
-      console.error('Error updating CBT:', error)
-    }
+  const handleDelete = async () => {
+    if (!cbtToDelete) return
+    deleteMutation.mutate(cbtToDelete.id)
   }
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading CBTs...</div>
+  const handleToggleActive = async (cbt: adminCbtsApi.CBT) => {
+    setPendingToggleId(cbt.id)
+    toggleMutation.mutate({ id: cbt.id, isActive: cbt.is_active })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <Loader size={32} className="text-primary" />
+        <p className="text-muted-foreground animate-pulse">Loading CBTs...</p>
+      </div>
+    )
   }
 
   return (
@@ -208,7 +171,11 @@ export default function AdminCBTsPage() {
                     </Link>
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => handleToggleActive(cbt)}>
-                    {cbt.is_active ? 'Deactivate' : 'Activate'}
+                    {pendingToggleId === cbt.id
+                      ? 'Updating...'
+                      : cbt.is_active
+                        ? 'Deactivate'
+                        : 'Activate'}
                   </Button>
                 </div>
               </CardContent>
@@ -240,7 +207,9 @@ export default function AdminCBTsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setCbtToDelete(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

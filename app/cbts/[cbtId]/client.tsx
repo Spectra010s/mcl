@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import * as cbtsApi from '@/lib/api/cbts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   Clock,
-  FileQuestion,
   GraduationCap,
   ChevronLeft,
   ChevronRight,
@@ -30,119 +30,153 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 
-interface Course {
-  id: number
-  course_code: string
-  course_title: string
-  academic_levels: {
-    level_number: number
-    departments: {
-      short_name: string
-      full_name: string
-    }
-  }
-}
-
-interface CBT {
-  id: number
-  title: string
-  description: string | null
-  time_limit_minutes: number | null
-  passing_score: number
-  courses: Course
-}
-
-interface Attempt {
-  id: number
-  attempt_number: number
-  score: number | null
-  passed: boolean | null
-  started_at: string
-  completed_at: string | null
-  time_taken_seconds: number | null
-  total_points_earned: number | null
-  total_points_possible: number | null
-}
-
-interface QuestionOption {
-  id: number
-  option_text: string
-}
-
-interface Question {
-  shuffled_index: number
-  question_id: number
-  question_text: string
-  question_type: string
-  options: QuestionOption[]
-}
-
-interface AttemptData {
-  attempt: Attempt & { cbts: CBT }
-  questions: Question[]
-  answers: Record<string, string>
-}
-
-interface ReviewOption {
-  id: number
-  option_text: string
-  is_correct: boolean
-}
-
-interface ReviewItem {
-  order_index: number
-  question_text: string
-  explanation: string | null
-  user_choice_id: number | null
-  user_choice_text: string | null
-  is_user_correct: boolean
-  options: ReviewOption[]
-}
-
-type ViewState = 'pre-test' | 'testing' | 'results' | 'review'
-
 interface CBTClientProps {
-  cbt: CBT
-  attempts: Attempt[]
+  cbt: cbtsApi.CBT
+  attempts: cbtsApi.Attempt[]
   userId: string
 }
 
-export default function CBTClient({ cbt, attempts: initialAttempts, userId }: CBTClientProps) {
-  const router = useRouter()
-  const [viewState, setViewState] = useState<ViewState>('pre-test')
-  const [attempts, setAttempts] = useState<Attempt[]>(initialAttempts)
-  const [currentAttempt, setCurrentAttempt] = useState<Attempt | null>(null)
-  const [questions, setQuestions] = useState<Question[]>([])
-  const [answers, setAnswers] = useState<Record<string, string>>({})
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
-  const [reviewData, setReviewData] = useState<ReviewItem[]>([])
+export default function CBTClient({ cbt, attempts: initialAttempts }: CBTClientProps) {
+  const queryClient = useQueryClient()
 
-  // Check for incomplete attempt on mount
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [now, setNow] = useState<number>(() => Date.now())
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
+  const [isReviewMode, setIsReviewMode] = useState(false)
+  const [completedAttempt, setCompletedAttempt] = useState<cbtsApi.Attempt | null>(null)
+  const saveAnswerTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const pendingAnswerRef = useRef<{ questionId: number; optionId: number } | null>(null)
+
+  // Queries
+  const { data: attempts = initialAttempts } = useQuery<cbtsApi.Attempt[]>({
+    queryKey: ['cbts', cbt.id, 'attempts'],
+    queryFn: () => cbtsApi.fetchCBTAttempts(cbt.id),
+    initialData: initialAttempts,
+  })
+
+  // Derive Active Attempt
+  const inProgressAttempt = useMemo(() => attempts.find(a => !a.completed_at), [attempts])
+  const activeAttemptId = inProgressAttempt?.id || null
+
+  const { data: attemptData, isLoading: loadingAttempt } = useQuery({
+    queryKey: ['cbts', 'attempts', activeAttemptId],
+    queryFn: () => cbtsApi.fetchAttempt(activeAttemptId!),
+    enabled: !!activeAttemptId,
+  })
+
+  // Derive View State
+  const currentViewState = useMemo(() => {
+    if (isReviewMode) return 'review'
+    if (completedAttempt) return 'results'
+    if (attemptData?.attempt.completed_at) return 'results'
+    if (activeAttemptId) return 'testing'
+    return 'pre-test'
+  }, [isReviewMode, completedAttempt, attemptData, activeAttemptId])
+
+  // Derive Timer
+  const timeRemaining = useMemo(() => {
+    if (currentViewState === 'testing' && attemptData && cbt.time_limit_minutes) {
+      const startTime = new Date(attemptData.attempt.started_at).getTime()
+      const elapsed = Math.floor((now - startTime) / 1000)
+      return Math.max(0, cbt.time_limit_minutes * 60 - elapsed)
+    }
+    return null
+  }, [currentViewState, attemptData, cbt.time_limit_minutes, now])
+
+  const { data: reviewData = [], isFetching: isFetchingReview } = useQuery({
+    queryKey: ['cbts', 'review', completedAttempt?.id],
+    queryFn: () => cbtsApi.fetchCBTReview(completedAttempt!.id),
+    enabled: currentViewState === 'review' && !!completedAttempt?.id,
+  })
+
+  const questions = attemptData?.questions || []
+  const currentAttempt = attemptData?.attempt || null
+  const answers = attemptData?.answers || {}
+
+  // 3. Mutations
+  const startMutation = useMutation({
+    mutationFn: () => cbtsApi.startCBTAttempt(cbt.id),
+    onSuccess: () => {
+      setCompletedAttempt(null)
+      queryClient.invalidateQueries({ queryKey: ['cbts', cbt.id, 'attempts'] })
+    },
+    onError: (error: Error & { status?: number; attemptId?: number }) => {
+      console.error('Error starting test:', error)
+      if (error.status !== 409) {
+        toast.error('Could not start the test. Please try again.')
+      } else if (error.attemptId) {
+        const conflictId = error.attemptId
+        queryClient.fetchQuery({
+          queryKey: ['cbts', 'attempts', conflictId],
+          queryFn: () => cbtsApi.fetchAttempt(conflictId),
+        })
+      }
+      queryClient.invalidateQueries({ queryKey: ['cbts', cbt.id, 'attempts'] })
+    },
+  })
+
+  const saveAnswerMutation = useMutation({
+    mutationFn: ({ questionId, optionId }: { questionId: number; optionId: number }) =>
+      cbtsApi.saveCBTAnswer(activeAttemptId!, questionId, optionId),
+    onMutate: async ({ questionId, optionId }) => {
+      const queryKey = ['cbts', 'attempts', activeAttemptId]
+      await queryClient.cancelQueries({ queryKey })
+      const previousData = queryClient.getQueryData<cbtsApi.AttemptData>(queryKey)
+
+      if (previousData) {
+        queryClient.setQueryData<cbtsApi.AttemptData>(queryKey, {
+          ...previousData,
+          answers: { ...previousData.answers, [questionId]: optionId.toString() },
+        })
+      }
+      return { previousData }
+    },
+    onError: (error, _variables, context) => {
+      console.error('Error saving answer:', error)
+      if (context?.previousData) {
+        queryClient.setQueryData(['cbts', 'attempts', activeAttemptId], context.previousData)
+      }
+      toast.error('Could not save answer. Please check your connection.')
+    },
+  })
+
+  const submitMutation = useMutation({
+    mutationFn: () => cbtsApi.submitCBTAttempt(activeAttemptId!),
+    onSuccess: data => {
+      setCompletedAttempt(data)
+      queryClient.invalidateQueries({ queryKey: ['cbts', cbt.id, 'attempts'] })
+      queryClient.invalidateQueries({ queryKey: ['cbts', 'attempts', activeAttemptId] })
+      setSubmitDialogOpen(false)
+      toast.success('Test submitted!')
+    },
+    onError: (error: Error) => {
+      console.error('Error submitting test:', error)
+      toast.error('Could not submit the test. Please try again.')
+    },
+  })
+
+  // Essential Timer Ticker
   useEffect(() => {
-    const incompleteAttempt = attempts.find(a => !a.completed_at)
-    if (incompleteAttempt) {
-      resumeAttempt(incompleteAttempt.id)
+    if (currentViewState !== 'testing') return
+    const timer = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [currentViewState])
+
+  // Clean up pending debounced save on unmount
+  useEffect(() => {
+    return () => {
+      if (saveAnswerTimeoutRef.current) {
+        clearTimeout(saveAnswerTimeoutRef.current)
+      }
     }
   }, [])
 
-  // Timer effect
+  // Auto-submit on time up
   useEffect(() => {
-    if (viewState !== 'testing' || timeRemaining === null) return
-
-    if (timeRemaining <= 0) {
-      handleSubmit()
-      return
+    if (timeRemaining === 0 && currentViewState === 'testing') {
+      submitMutation.mutate()
     }
-
-    const timer = setInterval(() => {
-      setTimeRemaining(prev => (prev !== null ? prev - 1 : null))
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [viewState, timeRemaining])
+  }, [timeRemaining, currentViewState, submitMutation])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -150,153 +184,49 @@ export default function CBTClient({ cbt, attempts: initialAttempts, userId }: CB
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  const resumeAttempt = async (attemptId: number) => {
-    setLoading(true)
-    try {
-      const response = await fetch(`/api/cbts/attempts/${attemptId}`)
-      if (response.ok) {
-        const data: AttemptData = await response.json()
-        if (data.attempt.completed_at) {
-          setCurrentAttempt(data.attempt)
-          setViewState('results')
-        } else {
-          setCurrentAttempt(data.attempt)
-          setQuestions(data.questions)
-          setAnswers(data.answers)
-
-          // Calculate remaining time
-          if (cbt.time_limit_minutes) {
-            const startTime = new Date(data.attempt.started_at).getTime()
-            const elapsed = Math.floor((Date.now() - startTime) / 1000)
-            const remaining = cbt.time_limit_minutes * 60 - elapsed
-            setTimeRemaining(Math.max(0, remaining))
-          }
-
-          setViewState('testing')
-        }
-      }
-    } catch (error) {
-      console.error('Error resuming attempt:', error)
-      toast.error('Failed to resume test')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const startTest = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch(`/api/cbts/${cbt.id}/attempts`, {
-        method: 'POST',
-      })
-
-      if (response.ok) {
-        const attempt = await response.json()
-        setCurrentAttempt(attempt)
-
-        // Fetch questions
-        const questionsRes = await fetch(`/api/cbts/attempts/${attempt.id}`)
-        if (questionsRes.ok) {
-          const data: AttemptData = await questionsRes.json()
-          setQuestions(data.questions)
-          setAnswers({})
-
-          if (cbt.time_limit_minutes) {
-            setTimeRemaining(cbt.time_limit_minutes * 60)
-          }
-
-          setViewState('testing')
-        }
-      } else if (response.status === 409) {
-        const data = await response.json()
-        resumeAttempt(data.attemptId)
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to start test')
-      }
-    } catch (error) {
-      console.error('Error starting test:', error)
-      toast.error('Failed to start test')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const saveAnswer = async (questionId: number, optionId: number) => {
-    if (!currentAttempt) return
-
-    setAnswers(prev => ({ ...prev, [questionId]: optionId.toString() }))
-
-    try {
-      await fetch(`/api/cbts/attempts/${currentAttempt.id}/answers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          questionId,
-          selectedOptionId: optionId,
-        }),
-      })
-    } catch (error) {
-      console.error('Error saving answer:', error)
-    }
-  }
-
-  const handleSubmit = async () => {
-    if (!currentAttempt) return
-
-    setLoading(true)
-    setSubmitDialogOpen(false)
-
-    try {
-      const response = await fetch(`/api/cbts/attempts/${currentAttempt.id}/submit`, {
-        method: 'POST',
-      })
-
-      if (response.ok) {
-        const updatedAttempt = await response.json()
-        setCurrentAttempt(updatedAttempt)
-        setAttempts(prev => prev.map(a => (a.id === updatedAttempt.id ? updatedAttempt : a)))
-        setViewState('results')
-        toast.success('Test submitted!')
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to submit test')
-      }
-    } catch (error) {
-      console.error('Error submitting test:', error)
-      toast.error('Failed to submit test')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadReview = async () => {
-    if (!currentAttempt) return
-
-    setLoading(true)
-    try {
-      const response = await fetch(`/api/cbts/attempts/${currentAttempt.id}/review`)
-      if (response.ok) {
-        const data = await response.json()
-        setReviewData(data.review)
-        setViewState('review')
-      }
-    } catch (error) {
-      console.error('Error loading review:', error)
-      toast.error('Failed to load review')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const currentQuestion = questions[currentQuestionIndex]
+  const loading =
+    startMutation.isPending || submitMutation.isPending || loadingAttempt || isFetchingReview
+  const currentQuestion = questions[currentQuestionIndex] as cbtsApi.Question | undefined
   const answeredCount = Object.keys(answers).length
   const completedAttempts = attempts.filter(a => a.completed_at)
   const bestScore =
     completedAttempts.length > 0 ? Math.max(...completedAttempts.map(a => a.score || 0)) : null
 
-  // Pre-test view
-  if (viewState === 'pre-test') {
+  const queueSaveAnswer = useCallback(
+    (questionId: number, optionId: number) => {
+      pendingAnswerRef.current = { questionId, optionId }
+      if (saveAnswerTimeoutRef.current) {
+        clearTimeout(saveAnswerTimeoutRef.current)
+      }
+      saveAnswerTimeoutRef.current = setTimeout(() => {
+        const pending = pendingAnswerRef.current
+        if (pending) {
+          saveAnswerMutation.mutate(pending)
+        }
+        saveAnswerTimeoutRef.current = null
+      }, 500)
+    },
+    [saveAnswerMutation],
+  )
+
+  const handleAnswerClick = useCallback(
+    (questionId: number, optionId: number) => {
+      // Immediate UI update for responsiveness
+      const queryKey = ['cbts', 'attempts', activeAttemptId]
+      queryClient.setQueryData<cbtsApi.AttemptData>(queryKey, previousData => {
+        if (!previousData) return previousData
+        return {
+          ...previousData,
+          answers: { ...previousData.answers, [questionId]: optionId.toString() },
+        }
+      })
+      queueSaveAnswer(questionId, optionId)
+    },
+    [activeAttemptId, queryClient, queueSaveAnswer],
+  )
+
+  // Pre-test View
+  if (currentViewState === 'pre-test') {
     return (
       <main className="flex-1 max-w-4xl mx-auto px-4 py-12 md:px-6">
         <Link href="/cbts" className="flex items-center gap-2 text-primary hover:underline mb-6">
@@ -339,17 +269,20 @@ export default function CBTClient({ cbt, attempts: initialAttempts, userId }: CB
             </div>
 
             {bestScore !== null && (
-              <div className="mb-6 p-4 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Your Best Score</span>
-                  <Badge variant={bestScore >= cbt.passing_score ? 'default' : 'secondary'}>
-                    {bestScore}%
-                  </Badge>
-                </div>
+              <div className="mb-6 p-4 border rounded-lg flex items-center justify-between">
+                <span className="text-muted-foreground">Your Best Score</span>
+                <Badge variant={bestScore >= cbt.passing_score ? 'default' : 'secondary'}>
+                  {bestScore}%
+                </Badge>
               </div>
             )}
 
-            <Button size="lg" className="w-full" onClick={startTest} disabled={loading}>
+            <Button
+              size="lg"
+              className="w-full"
+              onClick={() => startMutation.mutate()}
+              disabled={loading}
+            >
               {loading ? 'Loading...' : 'Start Test'}
             </Button>
           </CardContent>
@@ -393,8 +326,8 @@ export default function CBTClient({ cbt, attempts: initialAttempts, userId }: CB
     )
   }
 
-  // Testing view
-  if (viewState === 'testing' && currentQuestion) {
+  // Testing View
+  if (currentViewState === 'testing' && currentQuestion) {
     return (
       <main className="flex-1 max-w-4xl mx-auto px-4 py-6 md:px-6">
         {/* Timer and Progress Bar */}
@@ -434,7 +367,6 @@ export default function CBTClient({ cbt, attempts: initialAttempts, userId }: CB
           </div>
         </div>
 
-        {/* Question Card */}
         <Card className="mb-6">
           <CardHeader>
             <CardDescription>
@@ -449,7 +381,7 @@ export default function CBTClient({ cbt, attempts: initialAttempts, userId }: CB
               {currentQuestion.options.map((option, index) => (
                 <button
                   key={option.id}
-                  onClick={() => saveAnswer(currentQuestion.question_id, option.id)}
+                  onClick={() => handleAnswerClick(currentQuestion.question_id, option.id)}
                   className={`w-full text-left p-4 rounded-lg border transition-all ${
                     answers[currentQuestion.question_id] === option.id.toString()
                       ? 'border-primary bg-primary/10 ring-2 ring-primary/20'
@@ -474,11 +406,9 @@ export default function CBTClient({ cbt, attempts: initialAttempts, userId }: CB
             <ChevronLeft className="w-4 h-4 mr-2" />
             Previous
           </Button>
-
           <div className="text-sm text-muted-foreground">
             {answeredCount} of {questions.length} answered
           </div>
-
           {currentQuestionIndex < questions.length - 1 ? (
             <Button onClick={() => setCurrentQuestionIndex(prev => prev + 1)}>
               Next
@@ -509,7 +439,7 @@ export default function CBTClient({ cbt, attempts: initialAttempts, userId }: CB
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Continue Test</AlertDialogCancel>
-              <AlertDialogAction onClick={handleSubmit}>Submit</AlertDialogAction>
+              <AlertDialogAction onClick={() => submitMutation.mutate()}>Submit</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -517,19 +447,17 @@ export default function CBTClient({ cbt, attempts: initialAttempts, userId }: CB
     )
   }
 
-  // Results view
-  if (viewState === 'results' && currentAttempt) {
-    const passed = currentAttempt.passed
-    const score = currentAttempt.score || 0
-
+  // Results View
+  if (currentViewState === 'results' && (currentAttempt || completedAttempt)) {
+    const resultsAttempt = completedAttempt ?? currentAttempt!
+    const passed = resultsAttempt.passed
+    const score = resultsAttempt.score || 0
     return (
       <main className="flex-1 max-w-2xl mx-auto px-4 py-12 md:px-6">
         <Card className="text-center">
           <CardHeader>
             <div
-              className={`w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                passed ? 'bg-green-500/20' : 'bg-red-500/20'
-              }`}
+              className={`w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${passed ? 'bg-green-500/20' : 'bg-red-500/20'}`}
             >
               {passed ? (
                 <Trophy className="w-10 h-10 text-green-500" />
@@ -547,27 +475,24 @@ export default function CBTClient({ cbt, attempts: initialAttempts, userId }: CB
           <CardContent>
             <div className="text-6xl font-bold mb-2">{score}%</div>
             <div className="text-muted-foreground mb-6">
-              {currentAttempt.total_points_earned} / {currentAttempt.total_points_possible} points
+              {resultsAttempt.total_points_earned} / {resultsAttempt.total_points_possible} points
             </div>
-
-            {currentAttempt.time_taken_seconds && (
+            {resultsAttempt.time_taken_seconds && (
               <div className="text-sm text-muted-foreground mb-6">
-                Completed in {Math.floor(currentAttempt.time_taken_seconds / 60)}m{' '}
-                {currentAttempt.time_taken_seconds % 60}s
+                Completed in {Math.floor(resultsAttempt.time_taken_seconds / 60)}m{' '}
+                {resultsAttempt.time_taken_seconds % 60}s
               </div>
             )}
-
             <div className="flex flex-col gap-3">
-              <Button onClick={loadReview} disabled={loading}>
+              <Button onClick={() => setIsReviewMode(true)} disabled={loading}>
                 {loading ? 'Loading...' : 'Review Answers'}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => {
-                  setViewState('pre-test')
-                  setCurrentAttempt(null)
-                  setQuestions([])
-                  setAnswers({})
+                  setIsReviewMode(false)
+                  setCompletedAttempt(null)
+                  queryClient.invalidateQueries({ queryKey: ['cbts', cbt.id, 'attempts'] })
                 }}
               >
                 Try Again
@@ -582,24 +507,22 @@ export default function CBTClient({ cbt, attempts: initialAttempts, userId }: CB
     )
   }
 
-  // Review view
-  if (viewState === 'review') {
+  // Review View
+  if (isReviewMode) {
     return (
       <main className="flex-1 max-w-4xl mx-auto px-4 py-12 md:px-6">
-        <Button variant="ghost" onClick={() => setViewState('results')} className="mb-6">
+        <Button variant="ghost" onClick={() => setIsReviewMode(false)} className="mb-6">
           <ChevronLeft className="w-4 h-4 mr-2" />
           Back to Results
         </Button>
-
         <h1 className="text-2xl font-bold mb-6">Answer Review</h1>
-
         <div className="space-y-6">
           {reviewData.map((item, index) => (
             <Card
               key={index}
               className={item.is_user_correct ? 'border-green-500/50' : 'border-red-500/50'}
             >
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-3 text-left">
                 <div className="flex items-start gap-3">
                   {item.is_user_correct ? (
                     <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 shrink-0" />
@@ -619,21 +542,28 @@ export default function CBTClient({ cbt, attempts: initialAttempts, userId }: CB
                   {item.options.map((option, optIndex) => {
                     const isSelected = option.id === item.user_choice_id
                     const isCorrect = option.is_correct
-
-                    let className = 'w-full text-left p-3 rounded-lg border transition-all '
+                    let bgColor = 'bg-transparent'
+                    let borderColor = 'border-border'
+                    let textColor = 'text-foreground'
 
                     if (isCorrect) {
-                      className +=
-                        'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400 font-medium'
+                      bgColor = 'bg-green-500/10'
+                      borderColor = 'border-green-500'
+                      textColor = 'text-green-700 dark:text-green-400 font-medium'
                     } else if (isSelected && !isCorrect) {
-                      className +=
-                        'border-red-500 bg-red-500/10 text-red-700 dark:text-red-400 font-medium'
+                      bgColor = 'bg-red-500/10'
+                      borderColor = 'border-red-500'
+                      textColor = 'text-red-700 dark:text-red-400 font-medium'
                     } else {
-                      className += 'border-border opacity-70'
+                      borderColor = 'border-border'
+                      textColor = 'text-muted-foreground opacity-70'
                     }
 
                     return (
-                      <div key={option.id} className={className}>
+                      <div
+                        key={option.id}
+                        className={`w-full text-left p-3 rounded-lg border transition-all ${bgColor} ${borderColor} ${textColor}`}
+                      >
                         <span className="mr-3">{String.fromCharCode(65 + optIndex)}.</span>
                         {option.option_text}
                         {isSelected && (
@@ -644,7 +574,6 @@ export default function CBTClient({ cbt, attempts: initialAttempts, userId }: CB
                       </div>
                     )
                   })}
-
                   {item.explanation && (
                     <div className="mt-4 p-3 rounded bg-muted text-muted-foreground italic text-sm">
                       <span className="font-semibold not-italic block mb-1">Explanation:</span>

@@ -9,6 +9,7 @@ import { ResourcePreview } from '@/components/ResourcePreview'
 import { toast } from 'sonner'
 import { useRouter, useSearchParams } from 'next/navigation'
 import LinkifiedText from '@/components/LinkifiedText'
+import * as resourcesApi from '@/lib/api/resources'
 import type { User } from '@supabase/supabase-js'
 
 interface Resource {
@@ -98,7 +99,7 @@ export default function ResourceClient({ resource, user, initialBookmark }: Reso
 
     const form = document.createElement('form')
     form.method = 'POST'
-    form.action = `/api/resources/${resourceId}/download`
+    form.action = resourcesApi.getResourceDownloadUrl(resourceId)
     form.style.display = 'none'
     document.body.appendChild(form)
     form.submit()
@@ -116,17 +117,11 @@ export default function ResourceClient({ resource, user, initialBookmark }: Reso
 
     setActionLoading('bookmark')
     try {
-      const response = await fetch(`/api/resources/${resourceId}/bookmark`, {
-        method: 'POST',
-      })
-
-      if (!response.ok) throw new Error('Bookmark failed')
-
-      const data = await response.json()
+      const data = await resourcesApi.toggleResourceBookmark(resourceId)
       setIsBookmarked(data.bookmarked)
     } catch (error) {
       console.error('Bookmark error:', error)
-      alert('Failed to bookmark')
+      toast.error('Failed to bookmark. Please try again.')
     } finally {
       setActionLoading(null)
     }
@@ -141,13 +136,7 @@ export default function ResourceClient({ resource, user, initialBookmark }: Reso
 
     setActionLoading('preview')
     try {
-      const response = await fetch(`/api/resources/${resourceId}/preview`)
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Preview failed')
-      }
-
-      const data = await response.json()
+      const data = await resourcesApi.fetchResourcePreview(resourceId)
       setPreview({
         url: data.signedUrl,
         type: data.fileType,
@@ -239,9 +228,9 @@ export default function ResourceClient({ resource, user, initialBookmark }: Reso
           <Card className="p-6 mb-8">
             <h2 className="font-semibold text-lg mb-3">Keywords</h2>
             <div className="flex flex-wrap gap-2">
-              {resource.resource_keywords.map((kw, idx) => (
+              {resource.resource_keywords.map((kw: { keyword: string }, idx: number) => (
                 <span
-                  key={idx}
+                  key={`${kw.keyword}-${idx}`}
                   className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
                 >
                   {kw.keyword}
@@ -279,7 +268,11 @@ export default function ResourceClient({ resource, user, initialBookmark }: Reso
             disabled={actionLoading === 'bookmark'}
           >
             <BookmarkPlus className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
-            {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+            {actionLoading === 'bookmark'
+              ? 'Bookmarking...'
+              : isBookmarked
+                ? 'Bookmarked'
+                : 'Bookmark'}
           </Button>
         </div>
 

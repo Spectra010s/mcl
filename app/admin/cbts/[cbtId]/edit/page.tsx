@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import * as adminCbtsApi from '@/lib/api/admin/cbts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,29 +12,14 @@ import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { Loader } from '@/components/ui/loader'
 
-interface CBT {
-  id: number
-  title: string
-  description: string | null
-  time_limit_minutes: number | null
-  passing_score: number
-  is_active: boolean
-  courses: {
-    id: number
-    course_code: string
-    course_title: string
-  }
-}
+// Types are now handled by adminCbtsApi
 
 export default function EditCBTPage() {
   const router = useRouter()
   const params = useParams()
   const cbtId = params.cbtId as string
-
-  const [cbt, setCbt] = useState<CBT | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
 
   const [formData, setFormData] = useState({
     title: '',
@@ -42,70 +29,61 @@ export default function EditCBTPage() {
     questionLimit: '',
   })
 
+  const formInitializedRef = useRef(false)
+
+  const { data: cbt, isLoading } = useQuery<adminCbtsApi.CBT>({
+    queryKey: ['admin', 'cbts', cbtId],
+    queryFn: () => adminCbtsApi.fetchAdminCBT(cbtId),
+  })
+
   useEffect(() => {
-    const fetchCBT = async () => {
-      try {
-        const response = await fetch(`/api/admin/cbts/${cbtId}`, { cache: 'no-store' })
-        if (response.ok) {
-          const data = await response.json()
-          setCbt(data)
-          setFormData({
-            title: data.title,
-            description: data.description || '',
-            timeLimitMinutes: data.time_limit_minutes?.toString() || '',
-            passingScore: data.passing_score.toString(),
-            questionLimit: data.question_limit?.toString() || '',
-          })
-        } else {
-          toast.error('CBT not found')
-          router.push('/admin/cbts')
-        }
-      } catch (error) {
-        console.error('Error fetching CBT:', error)
-        toast.error('Failed to load CBT')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchCBT()
-  }, [cbtId, router])
+    if (!cbt || formInitializedRef.current) return
+    setFormData({
+      title: cbt.title,
+      description: cbt.description || '',
+      timeLimitMinutes: cbt.time_limit_minutes?.toString() || '',
+      passingScore: cbt.passing_score.toString(),
+      questionLimit: cbt.question_limit?.toString() || '',
+    })
+    formInitializedRef.current = true
+  }, [cbt])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (isLoading || cbt) return
+    toast.error('CBT not found')
+    router.push('/admin/cbts')
+  }, [cbt, isLoading, router])
+
+  const updateMutation = useMutation({
+    mutationFn: () =>
+      adminCbtsApi.updateAdminCBT(cbtId, {
+        title: formData.title,
+        description: formData.description || null,
+        time_limit_minutes: formData.timeLimitMinutes ? parseInt(formData.timeLimitMinutes) : null,
+        passing_score: parseInt(formData.passingScore),
+        question_limit: formData.questionLimit ? parseInt(formData.questionLimit) : null,
+      }),
+    onSuccess: () => {
+      toast.success('CBT updated successfully')
+      router.push('/admin/cbts')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update CBT')
+    },
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitting(true)
-
-    try {
-      const response = await fetch(`/api/admin/cbts/${cbtId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: formData.title,
-          description: formData.description || null,
-          time_limit_minutes: formData.timeLimitMinutes
-            ? parseInt(formData.timeLimitMinutes)
-            : null,
-          passing_score: parseInt(formData.passingScore),
-          question_limit: formData.questionLimit ? parseInt(formData.questionLimit) : null,
-        }),
-      })
-
-      if (response.ok) {
-        toast.success('CBT updated successfully')
-        router.push('/admin/cbts')
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to update CBT')
-      }
-    } catch (error) {
-      console.error('Error updating CBT:', error)
-      toast.error('Failed to update CBT')
-    } finally {
-      setSubmitting(false)
-    }
+    updateMutation.mutate()
   }
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading CBT...</div>
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <Loader size={32} className="text-primary" />
+        <p className="text-muted-foreground animate-pulse">Loading CBT details...</p>
+      </div>
+    )
   }
 
   if (!cbt) {
@@ -204,8 +182,8 @@ export default function EditCBTPage() {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <Button type="submit" disabled={submitting || !formData.title}>
-                  {submitting ? 'Saving...' : 'Save Changes'}
+                <Button type="submit" disabled={updateMutation.isPending || !formData.title}>
+                  {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => router.back()}>
                   Cancel
