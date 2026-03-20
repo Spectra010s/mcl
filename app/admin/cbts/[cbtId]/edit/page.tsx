@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { Loader } from '@/components/ui/loader'
 
 // Types are now handled by adminCbtsApi
 
@@ -71,13 +72,18 @@ export default function EditCBTPage() {
     },
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     updateMutation.mutate()
   }
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading CBT...</div>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <Loader size={32} className="text-primary" />
+        <p className="text-muted-foreground animate-pulse">Loading CBT details...</p>
+      </div>
+    )
   }
 
   if (!cbt) {

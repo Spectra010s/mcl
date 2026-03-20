@@ -19,6 +19,7 @@ import {
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { Loader } from '@/components/ui/loader'
 
 // Types are now handled by adminCbtsApi
 interface Option {
@@ -165,13 +166,18 @@ export default function EditQuestionPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     updateMutation.mutate()
   }
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading question...</div>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <Loader size={32} className="text-primary" />
+        <p className="text-muted-foreground animate-pulse">Loading question...</p>
+      </div>
+    )
   }
 
   return (
@@ -317,7 +323,14 @@ export default function EditQuestionPage() {
 
               <div className="flex gap-4 pt-4">
                 <Button type="submit" disabled={updateMutation.isPending || !formData.questionText}>
-                  {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+                  {updateMutation.isPending ? (
+                    <span className="flex items-center gap-2">
+                      <Loader size={16} className="text-white" />
+                      Saving...
+                    </span>
+                  ) : (
+                    'Save Changes'
+                  )}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => router.back()}>
                   Cancel

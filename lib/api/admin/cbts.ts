@@ -39,6 +39,26 @@ export interface Question {
   }[]
 }
 
+export interface Faculty {
+  id: number
+  full_name: string
+}
+
+export interface Department {
+  id: number
+  full_name: string
+}
+
+export interface Level {
+  id: number
+  level_number: number
+}
+
+export interface Course {
+  id: number
+  course_code: string
+  course_title: string
+}
 export const fetchAdminCBTs = async (): Promise<CBT[]> => {
   const response = await fetch('/api/admin/cbts', { cache: 'no-store' })
   if (!response.ok) throw new Error('Failed to fetch CBTs')
@@ -194,4 +214,31 @@ export const importAdminQuestions = async (
     throw error
   }
   return result
+}
+
+export const fetchAdminFaculties = async (): Promise<Faculty[]> => {
+  const response = await fetch('/api/admin/faculties', { cache: 'no-store' })
+  if (!response.ok) throw new Error('Failed to load faculties')
+  return response.json()
+}
+
+export const fetchAdminDepartments = async (facultyId: string): Promise<Department[]> => {
+  const response = await fetch(`/api/admin/faculties/${facultyId}/departments`)
+  if (!response.ok) throw new Error('Failed to load departments')
+  const data = await response.json()
+  return data.departments || []
+}
+
+export const fetchAdminLevels = async (departmentId: string): Promise<Level[]> => {
+  const response = await fetch(`/api/admin/departments/${departmentId}/levels`)
+  if (!response.ok) throw new Error('Failed to load levels')
+  const data = await response.json()
+  return data.levels || []
+}
+
+export const fetchAdminCourses = async (levelId: string): Promise<Course[]> => {
+  const response = await fetch(`/api/admin/levels/${levelId}/courses`)
+  if (!response.ok) throw new Error('Failed to load courses')
+  const data = await response.json()
+  return data.courses || []
 }
