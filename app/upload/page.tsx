@@ -1,7 +1,7 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,128 +14,82 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Loader } from '@/components/ui/loader'
 import { Upload } from 'lucide-react'
 import { toast } from 'sonner'
-
-interface Level {
-  id: number
-  level_number: number
-}
-
-interface Course {
-  id: number
-  course_code: string
-}
-
-interface Department {
-  id: number
-  full_name: string
-}
-
-interface Faculty {
-  id: number
-  full_name: string
-}
+import * as uploadApi from '@/lib/api/upload'
+import { useUser } from '@/hooks/useUser'
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>
 
 export default function UploadPage() {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [faculty, setFaculty] = useState('')
-  const [department, setDepartment] = useState('')
-  const [level, setLevel] = useState('')
-  const [course, setCourse] = useState('')
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    facultyId: '',
+    departmentId: '',
+    levelId: '',
+    courseId: '',
+  })
   const [file, setFile] = useState<File | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [isFetching, setIsFetching] = useState(false)
   const [dragging, setDragging] = useState(false)
-  const [faculties, setFaculties] = useState<Faculty[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [levels, setLevels] = useState<Level[]>([])
-  const [courses, setCourses] = useState<Course[]>([])
 
-  const supabase = createClient()
+  const { user } = useUser()
 
-  useEffect(() => {
-    const getFaculty = async () => {
-      const { data: facultyData } = await supabase
-        .from('faculties')
-        .select('id, full_name')
-        .order('full_name')
+  const { data: faculties = [], isLoading: isLoadingFaculties } = useQuery<uploadApi.Faculty[]>({
+    queryKey: ['faculties'],
+    queryFn: uploadApi.fetchFaculties,
+  })
 
-      if (facultyData) {
-        setFaculties(facultyData)
-      }
-    }
-    getFaculty()
-  }, [supabase])
+  const { data: departmentsData = [], isFetching: isFetchingDepartments } = useQuery<
+    uploadApi.Department[]
+  >({
+    queryKey: ['departments', formData.facultyId],
+    queryFn: () => uploadApi.fetchDepartments(formData.facultyId),
+    enabled: !!formData.facultyId,
+  })
 
-  const handleFacultyChange = async (facultyId: string) => {
-    setFaculty(facultyId)
-    setDepartment('')
-    setLevel('')
+  const { data: levelsData = [], isFetching: isFetchingLevels } = useQuery<uploadApi.Level[]>({
+    queryKey: ['levels', formData.departmentId],
+    queryFn: () => uploadApi.fetchLevels(formData.departmentId),
+    enabled: !!formData.departmentId,
+  })
 
-    if (facultyId) {
-      setIsFetching(true)
-      try {
-        const { data: deptData } = await supabase
-          .from('departments')
-          .select('id, full_name')
-          .eq('faculty_id', facultyId)
-          .order('full_name')
+  const { data: coursesData = [], isFetching: isFetchingCourses } = useQuery<uploadApi.Course[]>({
+    queryKey: ['courses', formData.levelId],
+    queryFn: () => uploadApi.fetchCourses(formData.levelId),
+    enabled: !!formData.levelId,
+  })
 
-        if (deptData) {
-          setDepartments(deptData)
-        }
-      } finally {
-        setIsFetching(false)
-      }
-    }
+  const departments = formData.facultyId ? departmentsData : []
+  const levels = formData.departmentId ? levelsData : []
+  const courses = formData.levelId ? coursesData : []
+
+  const handleFacultyChange = (facultyId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      facultyId,
+      departmentId: '',
+      levelId: '',
+      courseId: '',
+    }))
   }
 
-  const handleDeptChange = async (departmentId: string) => {
-    setDepartment(departmentId)
-    setLevel('')
-
-    if (departmentId) {
-      setIsFetching(true)
-      try {
-        const { data: levelData } = await supabase
-          .from('academic_levels')
-          .select('id, level_number')
-          .eq('department_id', departmentId)
-          .order('level_number')
-
-        if (levelData) {
-          setLevels(levelData)
-        }
-      } finally {
-        setIsFetching(false)
-      }
-    }
+  const handleDeptChange = (departmentId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      departmentId,
+      levelId: '',
+      courseId: '',
+    }))
   }
 
-  const handleLevelChange = async (levelId: string) => {
-    setLevel(levelId)
-    setCourse('')
-
-    if (levelId) {
-      setIsFetching(true)
-      try {
-        const { data: CourseData } = await supabase
-          .from('courses')
-          .select('id, course_code')
-          .eq('academic_level_id', levelId)
-          .order('course_code')
-
-        if (CourseData) {
-          setCourses(CourseData)
-        }
-      } finally {
-        setIsFetching(false)
-      }
-    }
+  const handleLevelChange = (levelId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      levelId,
+      courseId: '',
+    }))
   }
 
   const getFileTypeFromExtension = (filename: string): string => {
@@ -180,13 +134,18 @@ export default function UploadPage() {
   }
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    if (isUploading) return
     e.preventDefault()
     setDragging(true)
   }
 
-  const handleDragLeave = () => setDragging(false)
+  const handleDragLeave = () => {
+    if (isUploading) return
+    setDragging(false)
+  }
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    if (isUploading) return
     e.preventDefault()
     setDragging(false)
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
@@ -205,62 +164,56 @@ export default function UploadPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!title || !description || !faculty || !department || !level || !course || !file) {
+    if (
+      !formData.title ||
+      !formData.facultyId ||
+      !formData.departmentId ||
+      !formData.levelId ||
+      !formData.courseId ||
+      !file
+    ) {
       toast.error('Please fill in all required fields')
       return
     }
+    uploadMutation.mutate()
+  }
 
-    setLoading(true)
-
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+  const uploadMutation = useMutation({
+    mutationFn: async () => {
       if (!user) throw new Error('Not authenticated')
 
-      const autoDetectedType = getFileTypeFromExtension(file.name)
-
-      const filePath = `${user.id}/${Date.now()}-${file.name}`
-
-      const { error: uploadError } = await supabase.storage.from('mclib').upload(filePath, file)
-
-      if (uploadError) {
-        throw new Error('An Error Occured, Upload Failed.')
-      }
-
-      const { error: insertError } = await supabase.from('resources').insert({
-        title,
-        description,
-        course_id: course,
-        file_type: autoDetectedType,
-        file_url: filePath,
-        file_size_bytes: file.size,
-        is_approved: false,
-        uploaded_by: user.id,
+      const autoDetectedType = getFileTypeFromExtension(file!.name)
+      await uploadApi.uploadResource({
+        title: formData.title,
+        description: formData.description,
+        courseId: formData.courseId,
+        file: file!,
+        fileType: autoDetectedType,
+        userId: user.id,
       })
-
-      if (insertError) {
-        throw new Error('Upload Failed, Please try again')
-      }
-
+    },
+    onSuccess: () => {
       toast.success('Success', {
         description: `File uploaded successfully! It will appear after approval.
          Thanks for Contributing to MCL `,
       })
-      setTitle('')
-      setDescription('')
-      setFaculty('')
-      setDepartment('')
-      setLevel('')
-      setCourse('')
+      setFormData({
+        title: '',
+        description: '',
+        facultyId: '',
+        departmentId: '',
+        levelId: '',
+        courseId: '',
+      })
       setFile(null)
-    } catch (error: unknown) {
+    },
+    onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : 'Upload failed'
       toast.error('Upload Error', { description: errorMessage })
-    } finally {
-      setLoading(false)
-    }
-  }
+    },
+  })
+
+  const isUploading = uploadMutation.isPending
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
@@ -273,13 +226,6 @@ export default function UploadPage() {
           <CardDescription>Fill in the details and upload your file</CardDescription>
         </CardHeader>
         <CardContent className="relative">
-          {loading && (
-            <div className="absolute inset-0 bg-white/50 z-50 flex flex-col items-center justify-center">
-              <div className="animate-spin border-4 border-primary/50 border-t-primary rounded-full w-12 h-12 mb-2"></div>
-              <p className="text-primary font-semibold">Uploading...</p>
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information Section */}
             <div className="space-y-4">
@@ -289,26 +235,29 @@ export default function UploadPage() {
                 <Label htmlFor="title">Title *</Label>
                 <Input
                   id="title"
-                  value={title}
-                  onChange={(e: InputEvent) => setTitle(e.target.value)}
+                  value={formData.title}
+                  onChange={(e: InputEvent) =>
+                    setFormData(prev => ({ ...prev, title: e.target.value }))
+                  }
                   placeholder="Enter the title for the file"
                   className="border-primary/30"
                   required
+                  disabled={isUploading}
                 />
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="description">Description *</Label>
+                <Label htmlFor="description">Description (optional)</Label>
                 <Textarea
                   id="description"
-                  value={description}
+                  value={formData.description}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                    setDescription(e.target.value)
+                    setFormData(prev => ({ ...prev, description: e.target.value }))
                   }
                   placeholder="A short description on the content (e.g. Lecture notes covering modules 1-3)."
                   rows={4}
                   className="border-primary/30"
-                  required
+                  disabled={isUploading}
                 />
               </div>
             </div>
@@ -317,16 +266,30 @@ export default function UploadPage() {
               <h3 className="font-semibold text-primary">Classification</h3>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="grid gap-2">
-                  <Label htmlFor="faculty">Select Faculty *</Label>
-                  <Select value={faculty} onValueChange={handleFacultyChange}>
-                    <SelectTrigger className="border-primary/30">
-                      <SelectValue placeholder="Select faculty" />
+                <div className="space-y-2">
+                  <Label htmlFor="faculty">Faculty *</Label>
+                  <Select
+                    value={formData.facultyId}
+                    onValueChange={handleFacultyChange}
+                    disabled={isLoadingFaculties || isUploading}
+                  >
+                    <SelectTrigger className="w-full border-primary/30">
+                      <SelectValue placeholder="Select Faculty" />
                     </SelectTrigger>
                     <SelectContent>
+                      {isLoadingFaculties && (
+                        <div className="flex items-center justify-center py-2">
+                          <Loader size={16} className="text-primary" />
+                        </div>
+                      )}
+                      {!isLoadingFaculties && faculties.length === 0 && (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          No faculties available
+                        </div>
+                      )}
                       {faculties.map(f => (
                         <SelectItem key={f.id} value={String(f.id)}>
-                          <span className="truncate block max-w-[200px] md:max-w-xs">
+                          <span className="truncate block max-w-[260px] md:max-w-sm">
                             {f.full_name}
                           </span>
                         </SelectItem>
@@ -335,23 +298,34 @@ export default function UploadPage() {
                   </Select>
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="department">Select Department *</Label>
-                  <Select value={department} onValueChange={handleDeptChange} disabled={!faculty}>
-                    <SelectTrigger className="border-primary/30">
+                <div className="space-y-2">
+                  <Label htmlFor="department">Department *</Label>
+                  <Select
+                    value={formData.departmentId}
+                    onValueChange={handleDeptChange}
+                    disabled={!formData.facultyId || isUploading}
+                  >
+                    <SelectTrigger className="w-full border-primary/30">
                       <SelectValue
-                        placeholder={faculty ? 'Select Department' : 'Select faculty first'}
+                        placeholder={
+                          formData.facultyId ? 'Select Department' : 'Select faculty first'
+                        }
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      {isFetching && !department && faculty && (
+                      {isFetchingDepartments && !formData.departmentId && formData.facultyId && (
                         <div className="flex items-center justify-center py-2">
-                          <div className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                          <Loader size={16} className="text-primary" />
+                        </div>
+                      )}
+                      {!isFetchingDepartments && formData.facultyId && departments.length === 0 && (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          No departments available
                         </div>
                       )}
                       {departments.map(d => (
                         <SelectItem key={d.id} value={String(d.id)}>
-                          <span className="truncate block max-w-[200px] md:max-w-xs">
+                          <span className="truncate block max-w-[260px] md:max-w-sm">
                             {d.full_name}
                           </span>
                         </SelectItem>
@@ -360,20 +334,29 @@ export default function UploadPage() {
                   </Select>
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="level">Select Academic Level *</Label>
-                  <Select value={level} onValueChange={handleLevelChange} disabled={!department}>
-                    <SelectTrigger className="border-primary/30">
+                <div className="space-y-2">
+                  <Label htmlFor="level">Academic Level *</Label>
+                  <Select
+                    value={formData.levelId}
+                    onValueChange={handleLevelChange}
+                    disabled={!formData.departmentId || isUploading}
+                  >
+                    <SelectTrigger className="w-full border-primary/30">
                       <SelectValue
                         placeholder={
-                          department ? 'Select Academic Level' : 'Select department first'
+                          formData.departmentId ? 'Select Level' : 'Select department first'
                         }
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      {isFetching && !level && department && (
+                      {isFetchingLevels && !formData.levelId && formData.departmentId && (
                         <div className="flex items-center justify-center py-2">
-                          <div className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                          <Loader size={16} className="text-primary" />
+                        </div>
+                      )}
+                      {!isFetchingLevels && formData.departmentId && levels.length === 0 && (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          No levels available
                         </div>
                       )}
                       {levels.map(l => (
@@ -385,21 +368,32 @@ export default function UploadPage() {
                   </Select>
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="course">Select Course *</Label>
-                  <Select value={course} onValueChange={setCourse} disabled={!level}>
-                    <SelectTrigger className="border-primary/30">
-                      <SelectValue placeholder={level ? 'Select Course' : 'Select level first'} />
+                <div className="space-y-2">
+                  <Label htmlFor="course">Course *</Label>
+                  <Select
+                    value={formData.courseId}
+                    onValueChange={value => setFormData(prev => ({ ...prev, courseId: value }))}
+                    disabled={!formData.levelId || isUploading}
+                  >
+                    <SelectTrigger className="w-full border-primary/30">
+                      <SelectValue
+                        placeholder={formData.levelId ? 'Select Course' : 'Select level first'}
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      {isFetching && !course && level && (
+                      {isFetchingCourses && !formData.courseId && formData.levelId && (
                         <div className="flex items-center justify-center py-2">
-                          <div className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                          <Loader size={16} className="text-primary" />
+                        </div>
+                      )}
+                      {!isFetchingCourses && formData.levelId && courses.length === 0 && (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          No courses available
                         </div>
                       )}
                       {courses.map(c => (
                         <SelectItem key={c.id} value={String(c.id)}>
-                          <span className="truncate block max-w-[200px] md:max-w-xs">
+                          <span className="truncate block max-w-[260px] md:max-w-sm">
                             {c.course_code}
                           </span>
                         </SelectItem>
@@ -416,9 +410,9 @@ export default function UploadPage() {
 
               <div className="grid gap-2">
                 <div
-                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                     dragging ? 'border-primary/100 bg-primary/10' : 'border-primary/30'
-                  }`}
+                  } ${isUploading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
                   onDragLeave={handleDragLeave}
@@ -429,12 +423,13 @@ export default function UploadPage() {
                     onChange={handleFileChange}
                     className="hidden"
                     required
+                    disabled={isUploading}
                   />
-                  <label htmlFor="file" className="cursor-pointer">
+                  <label htmlFor="file" className="cursor-pointer block">
                     <Upload className="w-8 h-8 text-primary/40 mx-auto mb-2" />
                     {file ? (
-                      <div className="max-w-[300px] mx-auto overflow-hidden">
-                        <p className="font-semibold text-primary truncate" title={file.name}>
+                      <div className="max-w-[240px] w-full mx-auto px-2 overflow-hidden text-center">
+                        <p className="font-semibold text-primary truncate w-full" title={file.name}>
                           {file.name}
                         </p>
                         <p className="text-sm text-muted-foreground">
@@ -453,8 +448,19 @@ export default function UploadPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full bg-primary hover:bg-secondary text-white">
-              Upload File
+            <Button
+              type="submit"
+              className="w-full bg-primary hover:bg-secondary text-white"
+              disabled={uploadMutation.isPending}
+            >
+              {uploadMutation.isPending ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader size={16} className="text-white" />
+                  Uploading...
+                </span>
+              ) : (
+                'Upload File'
+              )}
             </Button>
           </form>
         </CardContent>

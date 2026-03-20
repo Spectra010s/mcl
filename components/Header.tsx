@@ -6,9 +6,8 @@ import { Menu, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useRouter, usePathname } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { useUser } from '@/hooks/useUser'
 import Image from 'next/image'
-import { User } from '@supabase/supabase-js'
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void
@@ -16,23 +15,11 @@ interface HeaderProps {
 
 export function Header({ onMobileMenuToggle }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState('')
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const supabase = createClient()
 
-  useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      setUser(user)
-      setLoading(false)
-    }
-    getUser()
-  }, [supabase])
+  const { user, isLoading: loading } = useUser()
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
