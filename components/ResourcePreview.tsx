@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import dynamic from 'next/dynamic'
 import { X, Maximize2, Minimize2 } from 'lucide-react'
@@ -32,19 +32,7 @@ export function ResourcePreview({
   fileType,
 }: ResourcePreviewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('standard')
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (isOpen) {
-      setViewMode('standard')
-    }
-  }, [isOpen])
-
-  if (!mounted || !isOpen) return null
+  if (typeof window === 'undefined' || !isOpen) return null
 
   const isPDF = fileType.toLowerCase() === 'pdf'
   const isImage = fileType.toLowerCase().match(/png|jpg|jpeg|gif|webp|svg/)
@@ -65,10 +53,13 @@ export function ResourcePreview({
     >
       {/* Backdrop for non-pip modes */}
       {viewMode !== 'pip' && (
-        <div
-          className="fixed inset-0 bg-black/60 -z-10 animate-in fade-in duration-300"
-          onClick={onClose}
-        />
+          <div
+            className="fixed inset-0 bg-black/60 -z-10 animate-in fade-in duration-300"
+            onClick={() => {
+              setViewMode('standard')
+              onClose()
+            }}
+          />
       )}
 
       {/* Header */}
@@ -151,7 +142,10 @@ export function ResourcePreview({
             variant="ghost"
             size="sm"
             className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive transition-colors"
-            onClick={onClose}
+            onClick={() => {
+              setViewMode('standard')
+              onClose()
+            }}
           >
             <X className="h-4 w-4" />
           </Button>

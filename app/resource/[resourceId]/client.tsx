@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -67,28 +67,7 @@ export default function ResourceClient({ resource, user, initialBookmark }: Reso
 
   const resourceId = resource.id
 
-  // Handle auto-trigger after login
-  useEffect(() => {
-    const action = searchParams.get('action')
-    if (action && user && resource && !hasAutoTriggered) {
-      setHasAutoTriggered(true)
-
-      // Clean up URL
-      const newParams = new URLSearchParams(searchParams.toString())
-      newParams.delete('action')
-      const newQuery = newParams.toString()
-      router.replace(`/resource/${resourceId}${newQuery ? `?${newQuery}` : ''}`, {
-        scroll: false,
-      })
-
-      // Execute action
-      if (action === 'download') handleDownload()
-      else if (action === 'preview') handlePreview()
-      else if (action === 'bookmark') handleBookmark()
-    }
-  }, [searchParams, user, resource, hasAutoTriggered, resourceId, router])
-
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
     if (!user) {
       const returnUrl = encodeURIComponent(`/resource/${resourceId}?action=download`)
       router.push(`/login?returnTo=${returnUrl}`)
@@ -106,9 +85,9 @@ export default function ResourceClient({ resource, user, initialBookmark }: Reso
     document.body.removeChild(form)
 
     setTimeout(() => setActionLoading(null), 2000)
-  }
+  }, [resourceId, router, user])
 
-  const handleBookmark = async () => {
+  const handleBookmark = useCallback(async () => {
     if (!user) {
       const returnUrl = encodeURIComponent(`/resource/${resourceId}?action=bookmark`)
       router.push(`/login?returnTo=${returnUrl}`)
@@ -125,9 +104,9 @@ export default function ResourceClient({ resource, user, initialBookmark }: Reso
     } finally {
       setActionLoading(null)
     }
-  }
+  }, [resourceId, router, user])
 
-  const handlePreview = async () => {
+  const handlePreview = useCallback(async () => {
     if (!user) {
       const returnUrl = encodeURIComponent(`/resource/${resourceId}?action=preview`)
       router.push(`/login?returnTo=${returnUrl}`)
@@ -150,7 +129,38 @@ export default function ResourceClient({ resource, user, initialBookmark }: Reso
     } finally {
       setActionLoading(null)
     }
-  }
+  }, [resourceId, router, user])
+
+  // Handle auto-trigger after login
+  useEffect(() => {
+    const action = searchParams.get('action')
+    if (action && user && resource && !hasAutoTriggered) {
+      setHasAutoTriggered(true)
+
+      // Clean up URL
+      const newParams = new URLSearchParams(searchParams.toString())
+      newParams.delete('action')
+      const newQuery = newParams.toString()
+      router.replace(`/resource/${resourceId}${newQuery ? `?${newQuery}` : ''}`, {
+        scroll: false,
+      })
+
+      // Execute action
+      if (action === 'download') handleDownload()
+      else if (action === 'preview') handlePreview()
+      else if (action === 'bookmark') handleBookmark()
+    }
+  }, [
+    searchParams,
+    user,
+    resource,
+    hasAutoTriggered,
+    resourceId,
+    router,
+    handleDownload,
+    handlePreview,
+    handleBookmark,
+  ])
 
   const isPreviewable = (type: string) => {
     const previewableTypes = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']

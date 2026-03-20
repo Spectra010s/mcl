@@ -18,6 +18,7 @@ export default function PdfViewer({ url }: PdfViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [pdf, setPdf] = useState<pdfjs.PDFDocumentProxy | null>(null)
+  const pdfRef = useRef<pdfjs.PDFDocumentProxy | null>(null)
   const [pageNumber, setPageNumber] = useState(1)
   const [numPages, setNumPages] = useState(0)
   const [scale, setScale] = useState(1.5)
@@ -64,23 +65,22 @@ export default function PdfViewer({ url }: PdfViewerProps) {
 
         try {
           await renderTask.promise
-        } catch (renderErr: any) {
-          if (
-            renderErr.name === 'RenderingCancelledException' ||
-            renderErr.message?.includes('cancelled')
-          ) {
+        } catch (renderErr) {
+          const err = renderErr as Error & { name?: string }
+          if (err.name === 'RenderingCancelledException' || err.message?.includes('cancelled')) {
             // Safe exit on cancellation
           } else {
-            throw renderErr
+            throw err
           }
         } finally {
           renderTaskRef.current = null
         }
-      } catch (err: any) {
-        if (err.name === 'RenderingCancelledException') {
+      } catch (err) {
+        const error = err as Error & { name?: string }
+        if (error.name === 'RenderingCancelledException') {
           // Handled above
         } else {
-          console.error('Error rendering page:', err)
+          console.error('Error rendering page:', error)
           setError('Failed to render page')
         }
       } finally {
@@ -91,17 +91,20 @@ export default function PdfViewer({ url }: PdfViewerProps) {
   )
 
   useEffect(() => {
+    const defaultScale = 1.5
     const loadPdf = async () => {
       setLoading(true)
       setError(null)
       try {
         const loadingTask = pdfjs.getDocument(url)
         const loadedPdf = await loadingTask.promise
+        pdfRef.current = loadedPdf
         setPdf(loadedPdf)
         setNumPages(loadedPdf.numPages)
         setPageNumber(1)
-        await renderPage(1, loadedPdf, scale)
-      } catch (err: any) {
+        setScale(defaultScale)
+        await renderPage(1, loadedPdf, defaultScale)
+      } catch (err) {
         console.error('Error loading PDF:', err)
         setError('Failed to load PDF. Please try again later.')
       } finally {
@@ -112,8 +115,13 @@ export default function PdfViewer({ url }: PdfViewerProps) {
     loadPdf()
 
     return () => {
-      if (pdf) {
-        pdf.destroy()
+      if (renderTaskRef.current) {
+        renderTaskRef.current.cancel()
+        renderTaskRef.current = null
+      }
+      if (pdfRef.current) {
+        pdfRef.current.destroy()
+        pdfRef.current = null
       }
     }
   }, [url, renderPage]) // Only reload when URL changes

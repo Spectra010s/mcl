@@ -53,7 +53,7 @@ export default function EditFacultyPage() {
     }
 
     fetchFaculty()
-  }, [facultyId])
+  }, [facultyId, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
