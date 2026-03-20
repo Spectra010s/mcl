@@ -177,7 +177,7 @@ export default function NewQuestionPage() {
     )
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     createMutation.mutate()
   }

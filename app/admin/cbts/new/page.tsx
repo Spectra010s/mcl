@@ -19,28 +19,13 @@ import {
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { Loader } from '@/components/ui/loader'
 
-// Types are now handled by adminCbtsApi or common admin types
-interface Faculty {
-  id: number
-  full_name: string
-}
-
-interface Department {
-  id: number
-  full_name: string
-}
-
-interface Level {
-  id: number
-  level_number: number
-}
-
-interface Course {
-  id: number
-  course_code: string
-  course_title: string
-}
+// Types are now handled by adminCbtsApi
+type Faculty = adminCbtsApi.Faculty
+type Department = adminCbtsApi.Department
+type Level = adminCbtsApi.Level
+type Course = adminCbtsApi.Course
 
 export default function NewCBTPage() {
   const router = useRouter()
@@ -60,65 +45,46 @@ export default function NewCBTPage() {
 
   const { data: faculties = [], isLoading: isLoadingFaculties } = useQuery<Faculty[]>({
     queryKey: ['admin', 'faculties'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/faculties', { cache: 'no-store' })
-      if (!response.ok) throw new Error('Failed to load faculties')
-      return response.json()
-    },
+    queryFn: adminCbtsApi.fetchAdminFaculties,
   })
 
   const { data: departments = [], isFetching: isFetchingDepartments } = useQuery<Department[]>({
     queryKey: ['admin', 'faculties', selectedFaculty, 'departments'],
-    queryFn: async () => {
-      const response = await fetch(`/api/admin/faculties/${selectedFaculty}/departments`)
-      if (!response.ok) throw new Error('Failed to load departments')
-      const data = await response.json()
-      return data.departments || []
-    },
+    queryFn: () => adminCbtsApi.fetchAdminDepartments(selectedFaculty),
     enabled: !!selectedFaculty,
   })
 
   const { data: levels = [], isFetching: isFetchingLevels } = useQuery<Level[]>({
     queryKey: ['admin', 'departments', selectedDepartment, 'levels'],
-    queryFn: async () => {
-      const response = await fetch(`/api/admin/departments/${selectedDepartment}/levels`)
-      if (!response.ok) throw new Error('Failed to load levels')
-      const data = await response.json()
-      return data.levels || []
-    },
+    queryFn: () => adminCbtsApi.fetchAdminLevels(selectedDepartment),
     enabled: !!selectedDepartment,
   })
 
   const { data: courses = [], isFetching: isFetchingCourses } = useQuery<Course[]>({
     queryKey: ['admin', 'levels', selectedLevel, 'courses'],
-    queryFn: async () => {
-      const response = await fetch(`/api/admin/levels/${selectedLevel}/courses`)
-      if (!response.ok) throw new Error('Failed to load courses')
-      const { courses } = await response.json()
-      return courses || []
-    },
+    queryFn: () => adminCbtsApi.fetchAdminCourses(selectedLevel),
     enabled: !!selectedLevel,
   })
 
-  const handleFacultyChange = async (facultyId: string) => {
+  const handleFacultyChange = (facultyId: string) => {
     setSelectedFaculty(facultyId)
     setSelectedDepartment('')
     setSelectedLevel('')
     setFormData(prev => ({ ...prev, courseId: '' }))
   }
 
-  const handleDeptChange = async (deptId: string) => {
+  const handleDeptChange = (deptId: string) => {
     setSelectedDepartment(deptId)
     setSelectedLevel('')
     setFormData(prev => ({ ...prev, courseId: '' }))
   }
 
-  const handleLevelChange = async (levelId: string) => {
+  const handleLevelChange = (levelId: string) => {
     setSelectedLevel(levelId)
     setFormData(prev => ({ ...prev, courseId: '' }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     createMutation.mutate()
   }
@@ -143,7 +109,12 @@ export default function NewCBTPage() {
   })
 
   if (isLoadingFaculties) {
-    return <div className="flex items-center justify-center min-h-screen">Loading Page...</div>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <Loader size={32} className="text-primary" />
+        <p className="text-muted-foreground animate-pulse">Loading Page...</p>
+      </div>
+    )
   }
 
   return (
@@ -209,7 +180,7 @@ export default function NewCBTPage() {
                     <SelectContent>
                       {isFetchingDepartments && !selectedDepartment && (
                         <div className="flex items-center justify-center py-2">
-                          <div className="animate-spin border-2 border-primary/20 border-t-primary rounded-full w-4 h-4" />
+                          <Loader size={16} className="text-primary" />
                         </div>
                       )}
                       {departments.map(d => (
@@ -240,7 +211,7 @@ export default function NewCBTPage() {
                     <SelectContent>
                       {isFetchingLevels && !selectedLevel && selectedDepartment && (
                         <div className="flex items-center justify-center py-2">
-                          <div className="animate-spin border-2 border-primary/20 border-t-primary rounded-full w-4 h-4" />
+                          <Loader size={16} className="text-primary" />
                         </div>
                       )}
                       {levels.map(l => (
@@ -267,7 +238,7 @@ export default function NewCBTPage() {
                     <SelectContent>
                       {isFetchingCourses && !formData.courseId && selectedLevel && (
                         <div className="flex items-center justify-center py-2">
-                          <div className="animate-spin border-2 border-primary/20 border-t-primary rounded-full w-4 h-4" />
+                          <Loader size={16} className="text-primary" />
                         </div>
                       )}
                       {courses.map(c => (

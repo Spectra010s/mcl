@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, ArrowLeft, Trash2, Edit, Upload } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { Loader } from '@/components/ui/loader'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -107,7 +108,12 @@ export default function QuestionsPage() {
   }
 
   if (isLoadingCbt || isLoadingQuestions) {
-    return <div className="flex items-center justify-center min-h-screen">Loading questions...</div>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <Loader size={32} className="text-primary" />
+        <p className="text-muted-foreground animate-pulse">Loading questions...</p>
+      </div>
+    )
   }
 
   return (
@@ -144,7 +150,11 @@ export default function QuestionsPage() {
                   onClick={() => document.getElementById('sqf-upload')?.click()}
                 >
                   <div className="flex items-center">
-                    <Upload className="w-4 h-4 mr-2" />
+                    {importMutation.isPending ? (
+                      <Loader size={16} className="text-white mr-2" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-2" />
+                    )}
                     {importMutation.isPending ? 'Importing...' : 'Bulk Import (.sqf)'}
                   </div>
                 </Button>

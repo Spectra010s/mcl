@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, ArrowLeft, Trash2, Edit, FileQuestion } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { Loader } from '@/components/ui/loader'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -77,7 +78,12 @@ export default function AdminCBTsPage() {
   }
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading CBTs...</div>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <Loader size={32} className="text-primary" />
+        <p className="text-muted-foreground animate-pulse">Loading CBTs...</p>
+      </div>
+    )
   }
 
   return (
