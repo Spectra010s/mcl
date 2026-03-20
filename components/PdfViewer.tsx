@@ -18,6 +18,7 @@ export default function PdfViewer({ url }: PdfViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [pdf, setPdf] = useState<pdfjs.PDFDocumentProxy | null>(null)
+  const pdfRef = useRef<pdfjs.PDFDocumentProxy | null>(null)
   const [pageNumber, setPageNumber] = useState(1)
   const [numPages, setNumPages] = useState(0)
   const [scale, setScale] = useState(1.5)
@@ -91,16 +92,19 @@ export default function PdfViewer({ url }: PdfViewerProps) {
   )
 
   useEffect(() => {
+    const defaultScale = 1.5
     const loadPdf = async () => {
       setLoading(true)
       setError(null)
       try {
         const loadingTask = pdfjs.getDocument(url)
         const loadedPdf = await loadingTask.promise
+        pdfRef.current = loadedPdf
         setPdf(loadedPdf)
         setNumPages(loadedPdf.numPages)
         setPageNumber(1)
-        await renderPage(1, loadedPdf, scale)
+        setScale(defaultScale)
+        await renderPage(1, loadedPdf, defaultScale)
       } catch (err: any) {
         console.error('Error loading PDF:', err)
         setError('Failed to load PDF. Please try again later.')
@@ -112,8 +116,13 @@ export default function PdfViewer({ url }: PdfViewerProps) {
     loadPdf()
 
     return () => {
-      if (pdf) {
-        pdf.destroy()
+      if (renderTaskRef.current) {
+        renderTaskRef.current.cancel()
+        renderTaskRef.current = null
+      }
+      if (pdfRef.current) {
+        pdfRef.current.destroy()
+        pdfRef.current = null
       }
     }
   }, [url, renderPage]) // Only reload when URL changes
