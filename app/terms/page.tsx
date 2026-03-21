@@ -61,18 +61,21 @@ export default function TermsPage() {
                 <li>Using the materials for any commercial purpose or for any public display</li>
                 <li>Attempting to decompile or reverse engineer any software</li>
                 <li>Removing any copyright or other proprietary notations</li>
-                <li>Transferring the materials to another person or "mirroring" the materials</li>
+                <li>
+                  Transferring the materials to another person or &quot;mirroring&quot; the
+                  materials
+                </li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-bold text-primary mb-3">3. Disclaimer</h2>
               <p className="text-muted-foreground leading-relaxed">
-                The materials on My Campus Library are provided on an 'as is' basis. My Campus
-                Library makes no warranties, expressed or implied, and hereby disclaims and negates
-                all other warranties including, without limitation, implied warranties or conditions
-                of merchantability, fitness for a particular purpose, or non-infringement of
-                intellectual property or other violation of rights.
+                The materials on My Campus Library are provided on an &apos;as is&apos; basis. My
+                Campus Library makes no warranties, expressed or implied, and hereby disclaims and
+                negates all other warranties including, without limitation, implied warranties or
+                conditions of merchantability, fitness for a particular purpose, or non-infringement
+                of intellectual property or other violation of rights.
               </p>
             </section>
 

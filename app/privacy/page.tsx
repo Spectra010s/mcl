@@ -41,10 +41,10 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-2xl font-bold text-primary mb-3">1. Introduction</h2>
               <p className="text-muted-foreground leading-relaxed">
-                My Campus Library ("we," "us," "our," or "Company") operates the My Campus Library
-                application. This page informs you of our policies regarding the collection, use,
-                and disclosure of personal data when you use our service and the choices you have
-                associated with that data.
+                My Campus Library (&quot;we,&quot; &quot;us,&quot; &quot;our,&quot; or
+                &quot;Company&quot;) operates the My Campus Library application. This page informs
+                you of our policies regarding the collection, use, and disclosure of personal data
+                when you use our service and the choices you have associated with that data.
               </p>
             </section>
 
@@ -80,8 +80,8 @@ export default function PrivacyPage() {
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 We may update our Privacy Policy from time to time. We will notify you of any
-                changes by posting the new Privacy Policy on this page and updating the "effective
-                date" at the top of this Privacy Policy.
+                changes by posting the new Privacy Policy on this page and updating the
+                &quot;effective date&quot; at the top of this Privacy Policy.
               </p>
             </section>
 
