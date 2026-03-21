@@ -38,6 +38,9 @@
           {
             "context": "test",
             "integration_id": 1161
+          },
+          {
+            "context": "Vercel"
           }
         ]
       }

@@ -41,6 +41,9 @@
           {
             "context": "test",
             "integration_id": 15368
+          },
+          {
+            "context": "Vercel"
           }
         ]
       }
