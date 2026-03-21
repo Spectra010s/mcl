@@ -3,7 +3,6 @@ import ResourceClient from './client'
 import { generateBreadcrumbSchema, createSchema } from '@/lib/schema'
 import { baseUrl } from '@/constants'
 import type { Metadata } from 'next'
-import type { User } from '@supabase/supabase-js'
 
 interface PageProps {
   params: Promise<{

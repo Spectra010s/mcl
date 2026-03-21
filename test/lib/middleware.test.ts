@@ -1,5 +1,5 @@
 import { updateSession } from '@/lib/supabase/middleware'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextRequest } from 'next/server'
 import { vi, describe, it, expect, beforeEach, Mock } from 'vitest'
 
 vi.mock('@supabase/ssr', () => ({
@@ -13,21 +13,10 @@ vi.mock('@supabase/ssr', () => ({
 }))
 
 describe('updateSession', () => {
-  let mockRequest: Partial<NextRequest>
-  let mockCookiesSet: Mock
+  let mockRequest: NextRequest
 
   beforeEach(() => {
-    mockCookiesSet = vi.fn()
-
-    mockRequest = {
-      cookies: {
-        getAll: vi.fn().mockReturnValue([]),
-      },
-      nextUrl: {
-        pathname: '/upload',
-        clone: vi.fn().mockImplementation(() => new URL('https://tayo.com/upload')),
-      },
-    }
+    mockRequest = new NextRequest(new URL('https://tayo.com/upload'))
   })
 
   it('returns NextResponse if user is authenticated', async () => {
@@ -54,7 +43,7 @@ describe('updateSession', () => {
   })
 
   it('does not redirect if unauthenticated but not on /upload', async () => {
-    mockRequest.nextUrl!.pathname = '/some-other-page'
+    mockRequest = new NextRequest(new URL('https://tayo.com/some-other-page'))
 
     const { createServerClient } = await import('@supabase/ssr')
     ;(createServerClient as Mock).mockReturnValueOnce({
@@ -66,18 +55,18 @@ describe('updateSession', () => {
   })
 
   it('returns 403 for unauthenticated access to /admin', async () => {
-    mockRequest.nextUrl!.pathname = '/admin'
+    mockRequest = new NextRequest(new URL('https://tayo.com/admin'))
     const { createServerClient } = await import('@supabase/ssr')
     ;(createServerClient as Mock).mockReturnValueOnce({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
     })
 
-    const res = await updateSession(mockRequest as NextRequest)
+    const res = await updateSession(mockRequest)
     expect(res.status).toBe(403)
   })
 
   it('returns 403 for non-admin user accessing /admin', async () => {
-    mockRequest.nextUrl!.pathname = '/admin'
+    mockRequest = new NextRequest(new URL('https://tayo.com/admin'))
     const { createServerClient } = await import('@supabase/ssr')
     const fromMock = vi.fn().mockReturnThis()
     ;(createServerClient as Mock).mockReturnValueOnce({
@@ -88,12 +77,12 @@ describe('updateSession', () => {
       single: vi.fn().mockResolvedValue({ data: { role: 'user' }, error: null }),
     })
 
-    const res = await updateSession(mockRequest as NextRequest)
+    const res = await updateSession(mockRequest)
     expect(res.status).toBe(403)
   })
 
   it('allows admin user to access /admin', async () => {
-    mockRequest.nextUrl!.pathname = '/admin'
+    mockRequest = new NextRequest(new URL('https://tayo.com/admin'))
     const { createServerClient } = await import('@supabase/ssr')
     ;(createServerClient as Mock).mockReturnValueOnce({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: '123' } } }) },
@@ -103,7 +92,7 @@ describe('updateSession', () => {
       single: vi.fn().mockResolvedValue({ data: { role: 'admin' }, error: null }),
     })
 
-    const res = await updateSession(mockRequest as NextRequest)
+    const res = await updateSession(mockRequest)
     expect(res.status).toBe(200)
   })
 })

@@ -13,7 +13,7 @@ export async function sendRejectionEmail(
   rejectionReason: string,
 ) {
   try {
-    const { data, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: `My Campus Library <${fromEmail}>`,
       to: userEmail,
       replyTo: replyToEmail,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LogOut, Download, BookmarkPlus, Search } from 'lucide-react'
-import { AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
@@ -58,9 +57,9 @@ export default function SettingsComponents({
   const [fullName, setFullName] = useState(`${p.first_name || ''} ${p.last_name || ''}`.trim())
   const [username, setUsername] = useState(p.username || '')
   const [profileLoading, setProfileLoading] = useState(false)
-  const [downloadHistory, setDownloadHistory] = useState<Download[]>(initialDownloads)
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>(initialBookmarks)
-  const [recentSearches, setRecentSearches] = useState<string[]>(initialSearches)
+  const [downloadHistory] = useState<Download[]>(initialDownloads)
+  const [bookmarks] = useState<Bookmark[]>(initialBookmarks)
+  const [recentSearches] = useState<string[]>(initialSearches)
 
   const [activeTab, setActiveTab] = useState('profile')
 

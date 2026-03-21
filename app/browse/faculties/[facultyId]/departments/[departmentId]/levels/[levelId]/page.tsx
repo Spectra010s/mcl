@@ -114,15 +114,12 @@ export default async function CoursesPage(props: PageProps) {
               <span>/Fa...</span>
             </Link>
             <span>/</span>
-            <Link
-              href={`/browse/faculties/$ { facultyId }`}
-              className="text-primary hover:underline"
-            >
+            <Link href={`/browse/faculties/${facultyId}`} className="text-primary hover:underline">
               {faculty?.short_name}
             </Link>
             <span>/</span>
             <Link
-              href={`/browse/faculties/$ { facultyId }/departments/$ { departmentId }`}
+              href={`/browse/faculties/${facultyId}/departments/${departmentId}`}
               className="text-primary hover:underline"
             >
               {dept?.short_name}
@@ -142,7 +139,7 @@ export default async function CoursesPage(props: PageProps) {
           {courses.map(course => (
             <Link
               key={course.id}
-              href={`/browse/faculties/$ { facultyId }/departments/$ { departmentId }/levels/$ { levelId }/courses/$ { course.id }`}
+              href={`/browse/faculties/${facultyId}/departments/${departmentId}/levels/${levelId}/courses/${course.id}`}
             >
               <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer p-6">
                 <div className="flex items-start justify-between">

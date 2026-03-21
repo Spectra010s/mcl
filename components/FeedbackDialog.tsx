@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Bug, Lightbulb, Upload, X, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import Image from 'next/image'
 
 type FeedbackType = 'bug' | 'feature' | null
 
@@ -171,10 +172,13 @@ export function FeedbackDialog({ children }: { children: React.ReactNode }) {
               <Label>Screenshot (optional)</Label>
               {screenshotPreview ? (
                 <div className="relative inline-block">
-                  <img
+                  <Image
                     src={screenshotPreview}
                     alt="Screenshot preview"
+                    width={500}
+                    height={300}
                     className="max-h-32 rounded-md border border-border"
+                    unoptimized
                   />
                   <button
                     type="button"

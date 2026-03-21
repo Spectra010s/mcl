@@ -28,17 +28,8 @@ export default async function Image(props: ImageProps) {
   const shortName = faculty?.short_name || ''
   const description = faculty?.description || 'Explore departments and courses'
 
-  // Fetch logo
-  let logoSvg = ''
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-    const logoResponse = await fetch(`${baseUrl}/logo.svg`)
-    if (logoResponse.ok) {
-      logoSvg = await logoResponse.text()
-    }
-  } catch (error) {
-    // Fallback if logo fetch fails - will show white box instead
-  }
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL
+  const iconUrl = `${baseUrl}/icon.png`
 
   return new ImageResponse(
     (
@@ -48,11 +39,35 @@ export default async function Image(props: ImageProps) {
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          backgroundColor: '#ffffff',
+          background: 'linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)',
           padding: '80px',
           fontFamily: 'system-ui, -apple-system, sans-serif',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
+        {/* Background Watermark */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 80,
+            right: 80,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src={iconUrl}
+            alt="Watermark"
+            width="200"
+            height="200"
+            style={{
+              borderRadius: '8px',
+              objectFit: 'cover',
+            }}
+          />
+        </div>
         {/* Header with branding */}
         <div
           style={{
@@ -61,23 +76,11 @@ export default async function Image(props: ImageProps) {
             marginBottom: '60px',
           }}
         >
-          {logoSvg && (
-            <img
-              src={`data:image/svg+xml,${encodeURIComponent(logoSvg)}`}
-              alt="Logo"
-              width="48"
-              height="48"
-              style={{
-                marginRight: '16px',
-                borderRadius: '50%',
-              }}
-            />
-          )}
           <div
             style={{
-              fontSize: '24px',
-              color: '#64748b',
-              fontWeight: '600',
+              fontSize: '32px',
+              color: '#1e293b',
+              fontWeight: '700',
             }}
           >
             My Campus Library
@@ -91,6 +94,7 @@ export default async function Image(props: ImageProps) {
             flexDirection: 'column',
             flex: 1,
             justifyContent: 'center',
+            paddingBottom: '40px',
           }}
         >
           <div
@@ -102,13 +106,13 @@ export default async function Image(props: ImageProps) {
           >
             <div
               style={{
-                fontSize: '18px',
+                fontSize: '24px',
                 color: '#0256a5',
                 backgroundColor: '#e6f2ff',
                 padding: '8px 16px',
                 borderRadius: '6px',
                 marginRight: '16px',
-                fontWeight: '500',
+                fontWeight: '600',
               }}
             >
               Faculty
@@ -116,9 +120,9 @@ export default async function Image(props: ImageProps) {
             {shortName && (
               <div
                 style={{
-                  fontSize: '18px',
-                  color: '#94a3b8',
-                  fontWeight: '500',
+                  fontSize: '24px',
+                  color: '#64748b',
+                  fontWeight: '600',
                 }}
               >
                 {shortName}
@@ -141,11 +145,11 @@ export default async function Image(props: ImageProps) {
 
           <p
             style={{
-              fontSize: '28px',
-              color: '#475569',
-              lineHeight: '1.6',
+              fontSize: '32px',
+              color: '#334155',
+              lineHeight: '1.5',
               margin: '0',
-              maxWidth: '900px',
+              maxWidth: '1000px',
             }}
           >
             {description.length > 140 ? `${description.substring(0, 140)}...` : description}
@@ -157,23 +161,35 @@ export default async function Image(props: ImageProps) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            paddingTop: '40px',
             borderTop: '1px solid #e2e8f0',
+            paddingTop: '18px',
             marginTop: 'auto',
+            marginBottom: '16px',
           }}
         >
           <div
             style={{
               fontSize: '20px',
-              color: '#94a3b8',
+              color: '#64748b',
               display: 'flex',
               alignItems: 'center',
             }}
           >
             <span style={{ marginRight: '8px' }}>🏛️</span>
-            <span>Explore departments and courses</span>
+            <span>Explore Departments</span>
           </div>
         </div>
+
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: '12px',
+            backgroundColor: '#1d4ed8',
+          }}
+        />
       </div>
     ),
     {

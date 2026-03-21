@@ -46,6 +46,13 @@ export default async function Image(props: ImageProps) {
   const levelNumber = level?.level_number || 'Level'
   const departmentName = dept?.full_name || 'Department'
   const facultyName = faculty?.full_name || 'Faculty'
+  const truncateText = (text: string, max: number) =>
+    text.length > max ? `${text.substring(0, max)}...` : text
+  const breadcrumbFaculty = truncateText(facultyName, 18)
+  const breadcrumbDepartment = truncateText(departmentName, 18)
+  const breadcrumbLevel = truncateText(String(levelNumber), 12)
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL
+  const iconUrl = `${baseUrl}/icon.png`
 
   return new ImageResponse(
     (
@@ -55,41 +62,48 @@ export default async function Image(props: ImageProps) {
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          backgroundColor: '#ffffff',
+          background: 'linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)',
           padding: '80px',
           fontFamily: 'system-ui, -apple-system, sans-serif',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
+        {/* Icon Watermark */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 80,
+            right: 80,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src={iconUrl}
+            alt="Watermark"
+            width="200"
+            height="200"
+            style={{
+              borderRadius: '8px',
+              objectFit: 'cover',
+            }}
+          />
+        </div>
         {/* Header with branding */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            marginBottom: '60px',
+            marginBottom: '32px',
           }}
         >
           <div
             style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '50%',
-              backgroundColor: '#0256a5',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: '16px',
-              color: '#ffffff',
-              fontSize: '20px',
+              fontSize: '32px',
+              color: '#1e293b',
               fontWeight: '700',
-            }}
-          >
-            MCL
-          </div>
-          <div
-            style={{
-              fontSize: '24px',
-              color: '#64748b',
-              fontWeight: '600',
             }}
           >
             My Campus Library
@@ -102,17 +116,18 @@ export default async function Image(props: ImageProps) {
             display: 'flex',
             alignItems: 'center',
             marginBottom: '24px',
-            fontSize: '16px',
-            color: '#94a3b8',
+            fontSize: '24px',
+            color: '#64748b',
+            maxWidth: '720px',
           }}
         >
-          <span>{facultyName}</span>
-          <span style={{ margin: '0 8px' }}>/</span>
-          <span>{departmentName}</span>
-          <span style={{ margin: '0 8px' }}>/</span>
-          <span>{levelNumber}</span>
-          <span style={{ margin: '0 8px' }}>/</span>
-          <span style={{ color: '#64748b', fontWeight: '500' }}>Course</span>
+          <span>{breadcrumbFaculty}</span>
+          <span style={{ margin: '0 12px' }}>/</span>
+          <span>{breadcrumbDepartment}</span>
+          <span style={{ margin: '0 12px' }}>/</span>
+          <span>{breadcrumbLevel}</span>
+          <span style={{ margin: '0 12px' }}>/</span>
+          <span style={{ color: '#0f172a', fontWeight: '800' }}>Course</span>
         </div>
 
         {/* Main content */}
@@ -122,6 +137,7 @@ export default async function Image(props: ImageProps) {
             flexDirection: 'column',
             flex: 1,
             justifyContent: 'center',
+            paddingBottom: '40px',
           }}
         >
           <div
@@ -133,13 +149,13 @@ export default async function Image(props: ImageProps) {
           >
             <div
               style={{
-                fontSize: '18px',
+                fontSize: '24px',
                 color: '#0256a5',
                 backgroundColor: '#e6f2ff',
                 padding: '8px 16px',
                 borderRadius: '6px',
                 marginRight: '16px',
-                fontWeight: '500',
+                fontWeight: '600',
               }}
             >
               Course
@@ -147,9 +163,9 @@ export default async function Image(props: ImageProps) {
             {courseCode && (
               <div
                 style={{
-                  fontSize: '18px',
-                  color: '#94a3b8',
-                  fontWeight: '500',
+                  fontSize: '24px',
+                  color: '#64748b',
+                  fontWeight: '600',
                 }}
               >
                 {courseCode}
@@ -159,12 +175,13 @@ export default async function Image(props: ImageProps) {
 
           <h1
             style={{
-              fontSize: '56px',
+              fontSize: '40px',
               fontWeight: '700',
-              color: '#0f172a',
-              margin: '0 0 32px 0',
-              lineHeight: '1.1',
+              color: '#020617',
+              margin: '0 0 24px 0',
+              lineHeight: '1.25',
               letterSpacing: '-0.02em',
+              maxWidth: '780px',
             }}
           >
             {courseTitle}
@@ -172,10 +189,11 @@ export default async function Image(props: ImageProps) {
 
           <p
             style={{
-              fontSize: '28px',
-              color: '#475569',
-              lineHeight: '1.6',
+              fontSize: '24px',
+              color: '#334155',
+              lineHeight: '1.5',
               margin: '0',
+              maxWidth: '780px',
             }}
           >
             {description.length > 140 ? `${description.substring(0, 140)}...` : description}
@@ -187,14 +205,26 @@ export default async function Image(props: ImageProps) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            paddingTop: '40px',
             borderTop: '1px solid #e2e8f0',
+            paddingTop: '18px',
             marginTop: 'auto',
+            marginBottom: '16px',
           }}
         >
           <span style={{ fontSize: '20px', marginRight: '8px' }}>📄</span>
-          <span style={{ fontSize: '20px', color: '#94a3b8' }}>View all course resources</span>
+          <span style={{ fontSize: '20px', color: '#64748b' }}>View all course resources</span>
         </div>
+
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: '12px',
+            backgroundColor: '#1d4ed8',
+          }}
+        />
       </div>
     ),
     {
