@@ -33,11 +33,11 @@
         "required_status_checks": [
           {
             "context": "lint",
-            "integration_id": 1161
+            "integration_id": 15368
           },
           {
             "context": "test",
-            "integration_id": 1161
+            "integration_id": 15368
           }
         ]
       }
