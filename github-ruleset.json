@@ -41,11 +41,14 @@
           {
             "context": "test",
             "integration_id": 15368
-          },
-          {
-            "context": "Vercel"
           }
         ]
+      }
+    },
+    {
+      "type": "required_deployments",
+      "parameters": {
+        "required_deployment_environments": ["Production"]
       }
     }
   ]
