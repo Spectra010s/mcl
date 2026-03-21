@@ -1,4 +1,3 @@
-import type { FAQItem } from '@/data/faq'
 import { FAQData } from '@/data/faq'
 import type { FAQPageNode } from './interface'
 

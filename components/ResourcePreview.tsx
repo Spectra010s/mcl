@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { X, Maximize2, Minimize2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -53,13 +54,13 @@ export function ResourcePreview({
     >
       {/* Backdrop for non-pip modes */}
       {viewMode !== 'pip' && (
-          <div
-            className="fixed inset-0 bg-black/60 -z-10 animate-in fade-in duration-300"
-            onClick={() => {
-              setViewMode('standard')
-              onClose()
-            }}
-          />
+        <div
+          className="fixed inset-0 bg-black/60 -z-10 animate-in fade-in duration-300"
+          onClick={() => {
+            setViewMode('standard')
+            onClose()
+          }}
+        />
       )}
 
       {/* Header */}
@@ -158,9 +159,11 @@ export function ResourcePreview({
           <PdfViewer url={fileUrl} />
         ) : isImage ? (
           <div className="w-full h-full flex items-center justify-center p-4">
-            <img
+            <Image
               src={fileUrl}
               alt={title}
+              width={1200}
+              height={800}
               className="max-w-full max-h-full object-contain drop-shadow-xl"
             />
           </div>
