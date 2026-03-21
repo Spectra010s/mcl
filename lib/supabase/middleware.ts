@@ -34,7 +34,7 @@ export async function updateSession(request: NextRequest) {
   const currentPath = pathname + search // add check for query params
 
   // Group protected routes
-  const isProtectedRoute = pathname === '/upload' || pathname.startsWith('/cbts')
+  const isProtectedRoute = pathname.startsWith('/cbts')
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()

@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
+import { useQueryToast } from '@/hooks/useQueryToast'
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>
 
@@ -22,6 +23,7 @@ export default function LoginContent() {
   const searchParams = useSearchParams()
   const returnTo = searchParams.get('returnTo') || '/browse/faculties'
   const supabase = createClient()
+  useQueryToast()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
