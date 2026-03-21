@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Bug, Lightbulb, ExternalLink, User } from 'lucide-react'
+import { Bug, Lightbulb, ExternalLink, User, AlertCircle, Mail } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -76,9 +76,12 @@ export default function AdminFeedback({ initialFeedback }: { initialFeedback: Fe
     }
   }
 
-  const filterFeedback = (type?: 'bug' | 'feature') => {
-    if (!type) return feedback
-    return feedback.filter(f => f.type === type)
+  const filterFeedback = (type?: 'bug' | 'feature', status?: Feedback['status']) => {
+    return feedback.filter(f => {
+      const matchType = !type || f.type === type
+      const matchStatus = !status || f.status === status
+      return matchType && matchStatus
+    })
   }
 
   const renderTable = (items: Feedback[]) => (
@@ -95,7 +98,7 @@ export default function AdminFeedback({ initialFeedback }: { initialFeedback: Fe
                 <TableHead className="w-[140px]">User</TableHead>
                 <TableHead className="w-[130px]">Status</TableHead>
                 <TableHead className="w-[100px]">Date</TableHead>
-                <TableHead className="w-[60px]">Media</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -162,16 +165,31 @@ export default function AdminFeedback({ initialFeedback }: { initialFeedback: Fe
                     </span>
                   </TableCell>
                   <TableCell>
-                    {item.screenshot_url && (
-                      <a
-                        href={item.screenshot_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:text-primary/80"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {item.screenshot_url && (
+                        <Button variant="ghost" size="icon" asChild className="h-8 w-8">
+                          <a
+                            href={item.screenshot_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="View Screenshot"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {item.user_email && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                          onClick={() => (window.location.href = `mailto:${item.user_email}`)}
+                          title={`Contact ${item.user_name || item.user_email}`}
+                        >
+                          <Mail className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -189,50 +207,85 @@ export default function AdminFeedback({ initialFeedback }: { initialFeedback: Fe
   return (
     <main className="p-6 max-w-7xl mx-auto">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="pb-1 px-4 pt-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Total Feedback
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 pb-4">
             <p className="text-2xl font-bold">{feedback.length}</p>
           </CardContent>
         </Card>
+
+        <Card className="border-blue-200/50 dark:border-blue-900/50">
+          <CardHeader className="pb-1 px-4 pt-4">
+            <CardTitle className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1.5 uppercase tracking-wider">
+              <AlertCircle className="w-3.5 h-3.5" />
+              Open Pending
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{openCount}</p>
+          </CardContent>
+        </Card>
+
         <Card className="border-red-200/50 dark:border-red-900/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-red-600 dark:text-red-400 flex items-center gap-1.5">
-              <Bug className="w-4 h-4" />
+          <CardHeader className="pb-1 px-4 pt-4">
+            <CardTitle className="text-xs font-medium text-red-600 dark:text-red-400 flex items-center gap-1.5 uppercase tracking-wider">
+              <Bug className="w-3.5 h-3.5" />
               Bug Reports
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{bugCount}</p>
+          <CardContent className="px-4 pb-4">
+            <p className="text-2xl font-bold text-red-700 dark:text-red-300">{bugCount}</p>
           </CardContent>
         </Card>
+
         <Card className="border-amber-200/50 dark:border-amber-900/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-              <Lightbulb className="w-4 h-4" />
+          <CardHeader className="pb-1 px-4 pt-4">
+            <CardTitle className="text-xs font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
+              <Lightbulb className="w-3.5 h-3.5" />
               Feature Requests
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{featureCount}</p>
+          <CardContent className="px-4 pb-4">
+            <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{featureCount}</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Feedback Tabs */}
-      <Tabs defaultValue="all">
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">All ({feedback.length})</TabsTrigger>
-          <TabsTrigger value="bugs">Bugs ({bugCount})</TabsTrigger>
-          <TabsTrigger value="features">Features ({featureCount})</TabsTrigger>
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="mb-6 h-11 p-1 border border-border">
+          <TabsTrigger
+            value="all"
+            className="px-3 data-[state=active]:text-primary data-[state=active]:shadow-sm"
+          >
+            All ({feedback.length})
+          </TabsTrigger>
+          <TabsTrigger
+            value="open"
+            className="px-3 data-[state=active]:text-primary data-[state=active]:shadow-sm"
+          >
+            Open ({openCount})
+          </TabsTrigger>
+          <TabsTrigger
+            value="bugs"
+            className="px-3 data-[state=active]:text-primary data-[state=active]:shadow-sm"
+          >
+            Bugs ({bugCount})
+          </TabsTrigger>
+          <TabsTrigger
+            value="features"
+            className="px-3 data-[state=active]:text-primary data-[state=active]:shadow-sm"
+          >
+            Features ({featureCount})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all">{renderTable(filterFeedback())}</TabsContent>
+        <TabsContent value="open">{renderTable(filterFeedback(undefined, 'open'))}</TabsContent>
         <TabsContent value="bugs">{renderTable(filterFeedback('bug'))}</TabsContent>
         <TabsContent value="features">{renderTable(filterFeedback('feature'))}</TabsContent>
       </Tabs>

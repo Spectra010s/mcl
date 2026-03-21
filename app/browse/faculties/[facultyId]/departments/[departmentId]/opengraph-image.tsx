@@ -18,7 +18,6 @@ export default async function Image(props: ImageProps) {
   const { facultyId, departmentId } = params
 
   const supabase = await createClient()
-
   const [facultyResult, deptResult] = await Promise.all([
     supabase.from('faculties').select('short_name, full_name').eq('id', facultyId).single(),
     supabase
@@ -36,18 +35,12 @@ export default async function Image(props: ImageProps) {
   const shortName = dept?.short_name || ''
   const description = dept?.description || 'Explore academic levels'
   const facultyName = faculty?.full_name || 'Faculty'
+  const truncateText = (text: string, max: number) =>
+    text.length > max ? `${text.substring(0, max)}...` : text
+  const breadcrumbFaculty = truncateText(facultyName, 28)
 
-  // Fetch logo
-  let logoSvg = ''
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-    const logoResponse = await fetch(`${baseUrl}/logo.svg`)
-    if (logoResponse.ok) {
-      logoSvg = await logoResponse.text()
-    }
-  } catch (error) {
-    // Fallback if logo fetch fails - will show white box instead
-  }
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL
+  const iconUrl = `${baseUrl}/icon.png`
 
   return new ImageResponse(
     (
@@ -57,36 +50,48 @@ export default async function Image(props: ImageProps) {
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          backgroundColor: '#ffffff',
+          background: 'linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)',
           padding: '80px',
           fontFamily: 'system-ui, -apple-system, sans-serif',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
+        {/* Icon Watermark */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 80,
+            right: 80,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src={iconUrl}
+            alt="Watermark"
+            width="200"
+            height="200"
+            style={{
+              borderRadius: '8px',
+              objectFit: 'cover',
+            }}
+          />
+        </div>
         {/* Header with branding */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            marginBottom: '60px',
+            marginBottom: '32px',
           }}
         >
-          {logoSvg && (
-            <img
-              src={`data:image/svg+xml,${encodeURIComponent(logoSvg)}`}
-              alt="Logo"
-              width="48"
-              height="48"
-              style={{
-                marginRight: '16px',
-                borderRadius: '50%',
-              }}
-            />
-          )}
           <div
             style={{
-              fontSize: '24px',
-              color: '#64748b',
-              fontWeight: '600',
+              fontSize: '32px',
+              color: '#1e293b',
+              fontWeight: '700',
             }}
           >
             My Campus Library
@@ -99,13 +104,14 @@ export default async function Image(props: ImageProps) {
             display: 'flex',
             alignItems: 'center',
             marginBottom: '24px',
-            fontSize: '18px',
-            color: '#94a3b8',
+            fontSize: '24px',
+            color: '#64748b',
+            maxWidth: '720px',
           }}
         >
-          <span>{facultyName}</span>
+          <span>{breadcrumbFaculty}</span>
           <span style={{ margin: '0 12px' }}>/</span>
-          <span style={{ color: '#64748b', fontWeight: '500' }}>Department</span>
+          <span style={{ color: '#0f172a', fontWeight: '800' }}>Department</span>
         </div>
 
         {/* Main content */}
@@ -115,6 +121,7 @@ export default async function Image(props: ImageProps) {
             flexDirection: 'column',
             flex: 1,
             justifyContent: 'center',
+            paddingBottom: '40px',
           }}
         >
           <div
@@ -126,13 +133,13 @@ export default async function Image(props: ImageProps) {
           >
             <div
               style={{
-                fontSize: '18px',
+                fontSize: '24px',
                 color: '#0256a5',
                 backgroundColor: '#e6f2ff',
                 padding: '8px 16px',
                 borderRadius: '6px',
                 marginRight: '16px',
-                fontWeight: '500',
+                fontWeight: '600',
               }}
             >
               Department
@@ -140,9 +147,9 @@ export default async function Image(props: ImageProps) {
             {shortName && (
               <div
                 style={{
-                  fontSize: '18px',
-                  color: '#94a3b8',
-                  fontWeight: '500',
+                  fontSize: '24px',
+                  color: '#64748b',
+                  fontWeight: '600',
                 }}
               >
                 {shortName}
@@ -152,12 +159,13 @@ export default async function Image(props: ImageProps) {
 
           <h1
             style={{
-              fontSize: '64px',
+              fontSize: '40px',
               fontWeight: '700',
-              color: '#0f172a',
-              margin: '0 0 32px 0',
-              lineHeight: '1.1',
+              color: '#020617',
+              margin: '0 0 24px 0',
+              lineHeight: '1.25',
               letterSpacing: '-0.02em',
+              maxWidth: '780px',
             }}
           >
             {departmentName}
@@ -165,11 +173,11 @@ export default async function Image(props: ImageProps) {
 
           <p
             style={{
-              fontSize: '28px',
-              color: '#475569',
-              lineHeight: '1.6',
+              fontSize: '24px',
+              color: '#334155',
+              lineHeight: '1.5',
               margin: '0',
-              maxWidth: '900px',
+              maxWidth: '780px',
             }}
           >
             {description.length > 140 ? `${description.substring(0, 140)}...` : description}
@@ -181,23 +189,35 @@ export default async function Image(props: ImageProps) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            paddingTop: '40px',
             borderTop: '1px solid #e2e8f0',
+            paddingTop: '18px',
             marginTop: 'auto',
+            marginBottom: '16px',
           }}
         >
           <div
             style={{
               fontSize: '20px',
-              color: '#94a3b8',
+              color: '#64748b',
               display: 'flex',
               alignItems: 'center',
             }}
           >
             <span style={{ marginRight: '8px' }}>📖</span>
-            <span>Browse academic levels</span>
+            <span>Browse Academic Levels</span>
           </div>
         </div>
+
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: '12px',
+            backgroundColor: '#1d4ed8',
+          }}
+        />
       </div>
     ),
     {
