@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest'
 import UploadClient from '@/app/upload/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/hooks/useUser'
@@ -50,11 +50,11 @@ describe('UploadClient', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    ;(useRouter as any).mockReturnValue({ push: mockPush })
-    ;(useSearchParams as any).mockReturnValue(mockSearchParams)
-    ;(useUser as any).mockReturnValue({ user: { id: 'user-123' } })
-    ;(useQuery as any).mockReturnValue({ data: [], isLoading: false })
-    ;(useMutation as any).mockReturnValue({ mutate: vi.fn(), isPending: false })
+    ;(useRouter as Mock).mockReturnValue({ push: mockPush })
+    ;(useSearchParams as Mock).mockReturnValue(mockSearchParams)
+    ;(useUser as Mock).mockReturnValue({ user: { id: 'user-123' } })
+    ;(useQuery as Mock).mockReturnValue({ data: [], isLoading: false })
+    ;(useMutation as Mock).mockReturnValue({ mutate: vi.fn(), isPending: false })
   })
 
   it('renders the upload form with correct title', () => {
@@ -63,7 +63,7 @@ describe('UploadClient', () => {
   })
 
   it('redirects guests to login with encoded form state', () => {
-    ;(useUser as any).mockReturnValue({ user: null })
+    ;(useUser as Mock).mockReturnValue({ user: null })
     render(<UploadClient />)
 
     const titleInput = screen.getByLabelText(/Title/i)
@@ -82,7 +82,7 @@ describe('UploadClient', () => {
       title: 'Restored Title',
       description: 'Restored Description',
     })
-    ;(useSearchParams as any).mockReturnValue(params)
+    ;(useSearchParams as Mock).mockReturnValue(params)
 
     render(<UploadClient />)
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -27,15 +27,16 @@ export default function UploadClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    facultyId: '',
-    departmentId: '',
-    levelId: '',
-    courseId: '',
+    title: searchParams.get('title') || '',
+    description: searchParams.get('description') || '',
+    facultyId: searchParams.get('facultyId') || '',
+    departmentId: searchParams.get('departmentId') || '',
+    levelId: searchParams.get('levelId') || '',
+    courseId: searchParams.get('courseId') || '',
   })
   const [file, setFile] = useState<File | null>(null)
   const [dragging, setDragging] = useState(false)
+  const hasRestoredToast = useRef(false)
 
   const { user } = useUser()
 
@@ -46,18 +47,10 @@ export default function UploadClient() {
       searchParams.get('facultyId') ||
       searchParams.get('description')
 
-    // If we have data in the URL and the form is currently empty
-    if (hasData && !formData.title && !formData.facultyId && !formData.description) {
+    // If we have data in the URL and haven't shown the toast yet
+    if (hasData && !hasRestoredToast.current) {
+      hasRestoredToast.current = true
       const fileName = searchParams.get('fileName')
-
-      setFormData({
-        title: searchParams.get('title') || '',
-        description: searchParams.get('description') || '',
-        facultyId: searchParams.get('facultyId') || '',
-        departmentId: searchParams.get('departmentId') || '',
-        levelId: searchParams.get('levelId') || '',
-        courseId: searchParams.get('courseId') || '',
-      })
 
       const restorationMessage = fileName
         ? `We've restored your form. Please re-select "${fileName}" to finish your upload.`
@@ -67,6 +60,19 @@ export default function UploadClient() {
         description: restorationMessage,
         duration: 8000,
       })
+
+      // Clean up URL parameters to prevent re-triggering if component remounts
+      const newParams = new URLSearchParams(searchParams.toString())
+      newParams.delete('title')
+      newParams.delete('description')
+      newParams.delete('facultyId')
+      newParams.delete('departmentId')
+      newParams.delete('levelId')
+      newParams.delete('courseId')
+      newParams.delete('fileName')
+      const newQuery = newParams.toString()
+      const newUrl = `${window.location.pathname}${newQuery ? `?${newQuery}` : ''}`
+      window.history.replaceState(null, '', newUrl)
     }
   }, [searchParams])
 
