@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useCallback } from 'react'
 import FormRestorer, { RestoreData } from './FormRestorer'
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,6 +37,17 @@ export default function UploadClient() {
   })
   const [file, setFile] = useState<File | null>(null)
   const [dragging, setDragging] = useState(false)
+
+  const isDirty =
+    formData.title !== '' ||
+    formData.description !== '' ||
+    formData.facultyId !== '' ||
+    formData.departmentId !== '' ||
+    formData.levelId !== '' ||
+    formData.courseId !== '' ||
+    file !== null
+
+  useUnsavedChanges(isDirty)
 
   const { user } = useUser()
 
