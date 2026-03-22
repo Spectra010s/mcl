@@ -11,6 +11,7 @@ import { website } from '@/schemas/website'
 import { organization } from '@/schemas/organization'
 import { createSchema } from '@/lib/schema'
 import { mclName } from '@/constants'
+import { UnsavedChangesProvider } from '@/components/providers/unsaved-changes-provider'
 
 const globalSchema = createSchema([website, organization])
 
@@ -105,7 +106,9 @@ export default function RootLayout({
         >
           <QueryProvider>
             <SerwistProvider swUrl="/serwist/sw.js">
-              <LayoutContent>{children}</LayoutContent>
+              <UnsavedChangesProvider>
+                <LayoutContent>{children}</LayoutContent>
+              </UnsavedChangesProvider>
             </SerwistProvider>
           </QueryProvider>
         </WatchupProviderWrapper>
