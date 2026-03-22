@@ -7,31 +7,38 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/passwordInput'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { CheckCircle } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>
 
-export default function SignUpContent() {
-  const [fullName, setFullName] = useState('')
-  const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+interface SignUpProps {
+  returnTo: string
+}
+
+export default function SignUpContent({ returnTo }: SignUpProps) {
+  const [form, setForm] = useState({
+    fullName: '',
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  })
   const [isLoading, setIsLoading] = useState(false)
-  const [emailConfirmationSent, setEmailConfirmationSent] = useState(false)
-  const searchParams = useSearchParams()
-  const returnTo = searchParams.get('returnTo') || '/browse/faculties'
+  const router = useRouter()
   const supabase = createClient()
+
+  const updateField = (field: keyof typeof form) => (e: InputEvent) => {
+    setForm(prev => ({ ...prev, [field]: e.target.value }))
+  }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    if (password !== confirmPassword) {
+    if (form.password !== form.confirmPassword) {
       toast.error('Passwords do not match')
       setIsLoading(false)
       return
@@ -41,7 +48,7 @@ export default function SignUpContent() {
       const { data: existingUser } = await supabase
         .from('users')
         .select('id')
-        .eq('username', username)
+        .eq('username', form.username)
         .single()
 
       if (existingUser) {
@@ -49,14 +56,14 @@ export default function SignUpContent() {
       }
 
       const { error: authError } = await supabase.auth.signUp({
-        email,
-        password,
+        email: form.email,
+        password: form.password,
         options: {
           emailRedirectTo: process.env.NEXT_PUBLIC_REDIRECT_URL,
           data: {
-            username: username,
-            first_name: fullName.split(' ')[0],
-            last_name: fullName.split(' ').slice(1).join(' '),
+            username: form.username,
+            first_name: form.fullName.split(' ')[0],
+            last_name: form.fullName.split(' ').slice(1).join(' '),
           },
         },
       })
@@ -71,7 +78,8 @@ export default function SignUpContent() {
         throw authError
       }
 
-      setEmailConfirmationSent(true)
+      toast.success('Account created successfully')
+      router.push(returnTo)
     } catch (error: unknown) {
       if (error instanceof Error) {
         switch (error.message) {
@@ -143,38 +151,6 @@ export default function SignUpContent() {
     }
   }
 
-  if (emailConfirmationSent) {
-    return (
-      <div className="flex min-h-svh w-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-6 md:p-10">
-        <div className="w-full max-w-md">
-          <Card className="border-primary/20">
-            <CardHeader>
-              <CardTitle className="text-2xl flex items-center gap-2">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-                Check Your Email
-              </CardTitle>
-              <CardDescription>Verification link sent</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-foreground">
-                We&apos;ve sent a verification link to <strong>{email}</strong>. Click the link in
-                the email to complete your account setup.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Once verified, you can start browsing and contributing resources!
-              </p>
-              <Link href={returnTo} className="block">
-                <Button className="w-full bg-primary hover:bg-secondary">
-                  Continue to Library
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="flex min-h-svh w-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-6 md:p-10">
       <div className="w-full max-w-md">
@@ -208,8 +184,8 @@ export default function SignUpContent() {
                     type="text"
                     placeholder="e.g.Adetayo Ade"
                     required
-                    value={fullName}
-                    onChange={(e: InputEvent) => setFullName(e.target.value)}
+                    value={form.fullName}
+                    onChange={updateField('fullName')}
                     className="border-primary/30"
                   />
                 </div>
@@ -220,8 +196,8 @@ export default function SignUpContent() {
                     type="text"
                     placeholder="e.g. Spectra010s"
                     required
-                    value={username}
-                    onChange={(e: InputEvent) => setUsername(e.target.value)}
+                    value={form.username}
+                    onChange={updateField('username')}
                     className="border-primary/30"
                   />
                 </div>
@@ -232,8 +208,8 @@ export default function SignUpContent() {
                     type="email"
                     placeholder="you@email.com"
                     required
-                    value={email}
-                    onChange={(e: InputEvent) => setEmail(e.target.value)}
+                    value={form.email}
+                    onChange={updateField('email')}
                     className="border-primary/30"
                   />
                 </div>
@@ -243,8 +219,8 @@ export default function SignUpContent() {
                     id="password"
                     placeholder="Create a strong password"
                     required
-                    value={password}
-                    onChange={(e: InputEvent) => setPassword(e.target.value)}
+                    value={form.password}
+                    onChange={updateField('password')}
                     className="border-primary/30"
                   />
                 </div>
@@ -254,8 +230,8 @@ export default function SignUpContent() {
                     id="confirmPassword"
                     placeholder="Confirm your password"
                     required
-                    value={confirmPassword}
-                    onChange={(e: InputEvent) => setConfirmPassword(e.target.value)}
+                    value={form.confirmPassword}
+                    onChange={updateField('confirmPassword')}
                     className="border-primary/30"
                   />
                 </div>

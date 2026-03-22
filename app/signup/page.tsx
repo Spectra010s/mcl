@@ -1,6 +1,4 @@
 import type { Metadata } from 'next'
-import { Suspense } from 'react'
-
 import SignUpContent from './client'
 
 import { generateBreadcrumbSchema, createSchema } from '@/lib/schema'
@@ -20,7 +18,18 @@ export const metadata: Metadata = {
   description:
     'Join the community to start contributing and accessing academic materials for your courses.',
 }
-export default function SignUpPage() {
+
+type PageProps = {
+  searchParams?: Promise<{
+    returnTo?: string | string[]
+  }>
+}
+
+export default async function SignUpPage({ searchParams }: PageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const returnToParam = resolvedSearchParams?.returnTo
+  const returnTo = Array.isArray(returnToParam) ? returnToParam[0] : returnToParam
+
   return (
     <>
       <script
@@ -29,10 +38,7 @@ export default function SignUpPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-
-      <Suspense fallback={<div>Loading...</div>}>
-        <SignUpContent />
-      </Suspense>
+      <SignUpContent returnTo={returnTo || '/browse/faculties'} />
     </>
   )
 }
