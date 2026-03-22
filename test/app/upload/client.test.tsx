@@ -3,6 +3,7 @@ import { vi, describe, it, expect, beforeEach, Mock } from 'vitest'
 import UploadClient from '@/app/upload/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/hooks/useUser'
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
@@ -10,6 +11,10 @@ import { toast } from 'sonner'
 vi.mock('next/navigation', () => ({
   useRouter: vi.fn(),
   useSearchParams: vi.fn(),
+}))
+
+vi.mock('@/hooks/use-unsaved-changes', () => ({
+  useUnsavedChanges: vi.fn(),
 }))
 
 vi.mock('@/hooks/useUser', () => ({
@@ -53,6 +58,7 @@ describe('UploadClient', () => {
     ;(useRouter as Mock).mockReturnValue({ push: mockPush })
     ;(useSearchParams as Mock).mockReturnValue(mockSearchParams)
     ;(useUser as Mock).mockReturnValue({ user: { id: 'user-123' } })
+    ;(useUnsavedChanges as Mock).mockImplementation(() => undefined)
     ;(useQuery as Mock).mockReturnValue({ data: [], isLoading: false })
     ;(useMutation as Mock).mockReturnValue({ mutate: vi.fn(), isPending: false })
   })
@@ -60,6 +66,7 @@ describe('UploadClient', () => {
   it('renders the upload form with correct title', () => {
     render(<UploadClient />)
     expect(screen.getByText('Upload Resource')).toBeDefined()
+    expect(useUnsavedChanges).toHaveBeenCalledWith(false)
   })
 
   it('redirects guests to login with encoded form state', () => {
@@ -68,6 +75,7 @@ describe('UploadClient', () => {
 
     const titleInput = screen.getByLabelText(/Title/i)
     fireEvent.change(titleInput, { target: { value: 'My Awesome Notes' } })
+    expect(useUnsavedChanges).toHaveBeenLastCalledWith(true)
 
     const uploadButton = screen.getByRole('button', { name: /Upload File/i })
     fireEvent.click(uploadButton)
