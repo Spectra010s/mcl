@@ -77,27 +77,48 @@ Visit http://localhost:3000 to see the application.
 
 ## Project Structure
 
+```mcl/
+├── app/                  # Next.js app directory
+│   ├── about/            # About us page
+│   ├── admin/            # Admin dashboard (role-protected)
+│   ├── api/              # API routes files
+│   ├── auth/             # Authentication pages
+│   ├── browse/           # Browse by faculty → course
+│   ├── cbt/              # Computer Based Test (CBT) engine
+│   ├── cbts/             # CBT resource repository
+│   ├── help/             # Help and FAQ page
+│   ├── lib/              # App-specific logic and providers
+│   ├── login/            # User login page
+│   ├── privacy/          # Privacy policy page
+│   ├── resource/         # Resource details and viewing
+│   ├── search/           # Search interface
+│   ├── serwist/          # Service worker configuration (PWA)
+│   ├── settings/         # User settings and profile
+│   ├── signup/           # User registration page
+│   ├── terms/            # Terms of service page
+│   ├── upload/           # Resource upload form
+│   └── ~offline/         # Offline fallback page (PWA)
+├── assets/               # MCL brand assets (logos, SVGs)
+├── components/           # React and Page components
+│   ├── providers/        # Context providers (Auth, Query)
+│   └── ui/               # Shared UI primitives (shadcn)
+├── constants/            # Global constants and config
+├── data/                 # Static data and mock files
+├── docs/                 # Full documentation
+├── hooks/                # Custom React hooks
+├── lib/                  # Utilities and configurations
+│   ├── api/              # Backend API clients
+│   ├── parser/           # Document and file parsers
+│   ├── schema/           # App logic schemas
+│   └── supabase/         # Supabase client and database logic
+├── public/               # Static assets (icons, manifest)
+├── schemas/              # SEO and structured data schemas
+├── scripts/              # Database migrations
+│   └── legacy/           # Legacy scripts and tools
+└── test/                 # Test suites (app, components, lib)
 ```
-mcl/
-├── app/ # Next.js app directory
-│ ├── admin/ # Admin dashboard (role-protected)
-│ ├── auth/ # Authentication pages
-│ ├── browse/ # Browse by faculty → course
-│ ├── search/ # Search interface
-│ ├── resource/ # Resource details
-│ ├── help/ # Help and FAQ page
-│ ├── about/ # About us page
-│ ├── api/ # API routes files
-│ ├── upload/ # Upload form
-│ ├── settings/ # User settings
-│ └── page.tsx # Homepage
-├── assets/ MCL brand assets
-├── components/ # React and Page components
-├── lib/ # Utilities and configurations
-├── docs/ # Full documentation
-├── scripts/ # Database migrations
-└── README.md
-```
+
+> **[View Full Directory Specification ](https://github.com/Spectra010s/mcl/main/blob/STRUCTURE.md)**
 
 For detailed documentation, see the `/docs` folder.
 
