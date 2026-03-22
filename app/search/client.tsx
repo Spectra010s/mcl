@@ -11,6 +11,7 @@ import { Download, BookmarkPlus, Search, Eye } from 'lucide-react'
 import { toast } from 'sonner'
 import * as searchApi from '@/lib/api/search'
 import { useUser } from '@/hooks/useUser'
+import { buildLoginRedirect } from '@/lib/auth/loginRedirect'
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>
 
@@ -50,7 +51,8 @@ export default function SearchClient() {
 
   const handleDownload = (resourceId: number) => {
     if (!user) {
-      router.push('/login?message=Login to download the file')
+      const returnTo = `/resource/${resourceId}?action=download`
+      router.push(buildLoginRedirect(returnTo, 'Please log in to download this resource.'))
       return
     }
 
@@ -123,7 +125,8 @@ export default function SearchClient() {
 
   const handleBookmark = (resourceId: number) => {
     if (!user) {
-      router.push('/login?message=Login to bookmark')
+      const returnTo = `/resource/${resourceId}?action=bookmark`
+      router.push(buildLoginRedirect(returnTo, 'Please log in to bookmark this resource.'))
       return
     }
 
@@ -180,43 +183,33 @@ export default function SearchClient() {
                   </div>
 
                   <div className="flex flex-col gap-2 items-start">
-                    {user ? (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="flex items-center gap-2"
-                          onClick={() => handleDownload(r.id)}
-                          disabled={downloadingId === r.id.toString()}
-                        >
-                          <Download className="w-4 h-4" />
-                          {downloadingId === r.id.toString() ? 'Downloading...' : 'Download'}
-                        </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="flex items-center gap-2"
+                      onClick={() => handleDownload(r.id)}
+                      disabled={downloadingId === r.id.toString()}
+                    >
+                      <Download className="w-4 h-4" />
+                      {downloadingId === r.id.toString() ? 'Downloading...' : 'Download'}
+                    </Button>
 
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className={`flex items-center gap-2 ${r.isBookmarked ? 'text-blue-600' : ''}`}
-                          onClick={() => handleBookmark(r.id)}
-                          disabled={bookmarkingId === r.id.toString()}
-                        >
-                          <BookmarkPlus
-                            className={`w-4 h-4 ${r.isBookmarked ? 'fill-current text-blue-600' : ''}`}
-                          />
-                          {bookmarkingId === r.id.toString()
-                            ? 'Bookmarking...'
-                            : r.isBookmarked
-                              ? 'Bookmarked'
-                              : 'Bookmark'}
-                        </Button>
-                      </>
-                    ) : (
-                      <Link href="/login">
-                        <Button size="sm" className="w-full">
-                          Login to access
-                        </Button>
-                      </Link>
-                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className={`flex items-center gap-2 ${r.isBookmarked ? 'text-blue-600' : ''}`}
+                      onClick={() => handleBookmark(r.id)}
+                      disabled={bookmarkingId === r.id.toString()}
+                    >
+                      <BookmarkPlus
+                        className={`w-4 h-4 ${r.isBookmarked ? 'fill-current text-blue-600' : ''}`}
+                      />
+                      {bookmarkingId === r.id.toString()
+                        ? 'Bookmarking...'
+                        : r.isBookmarked
+                          ? 'Bookmarked'
+                          : 'Bookmark'}
+                    </Button>
                   </div>
                 </div>
                 <div>
@@ -234,7 +227,7 @@ export default function SearchClient() {
                     </div>
                   )}
                 </div>
-                <div className="border border-t-1"></div>
+                <div className="border border-t"></div>
                 <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                   <span className="text-primary">{r.file_type?.toUpperCase() || 'FILE'}</span>
 

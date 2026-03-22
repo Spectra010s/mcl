@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Menu, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useUser } from '@/hooks/useUser'
 import Image from 'next/image'
 
@@ -14,17 +14,21 @@ interface HeaderProps {
 }
 
 export function Header({ onMobileMenuToggle }: HeaderProps) {
-  const [searchQuery, setSearchQuery] = useState('')
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const activeQuery = searchParams.get('q') || ''
 
   const { user, isLoading: loading } = useUser()
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+    const formData = new FormData(e.currentTarget as HTMLFormElement)
+    const query = String(formData.get('q') || '').trim()
+
+    if (query) {
+      router.push(`/search?q=${encodeURIComponent(query)}`)
       setMobileSearchOpen(false)
     }
   }
@@ -47,10 +51,11 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           <form onSubmit={handleSearch} className="flex-1 md:hidden">
             <div className="relative w-full">
               <Input
+                key={`mobile-${pathname}-${activeQuery}`}
+                name="q"
                 type="text"
                 placeholder="Search resources..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                defaultValue={pathname === '/search' ? activeQuery : ''}
                 className="pl-10 pr-4"
                 autoFocus
               />
@@ -62,10 +67,11 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         <form onSubmit={handleSearch} className="hidden md:flex flex-1 mx-6 max-w-md">
           <div className="relative w-full">
             <Input
+              key={`desktop-${pathname}-${activeQuery}`}
+              name="q"
               type="text"
               placeholder="Search resources..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              defaultValue={pathname === '/search' ? activeQuery : ''}
               className="pl-10 pr-4"
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
