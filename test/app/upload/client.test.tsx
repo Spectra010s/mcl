@@ -13,7 +13,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: vi.fn(),
 }))
 
-vi.mock('@/hooks/use-unsaved-changes', () => ({
+vi.mock('@/hooks/useUnsavedChanges', () => ({
   useUnsavedChanges: vi.fn(),
 }))
 
