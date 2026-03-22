@@ -5,9 +5,10 @@ import Link from 'next/link'
 import { Menu, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useUser } from '@/hooks/useUser'
 import Image from 'next/image'
+import { useSearchQueryContext } from '@/components/providers/searchQueryProvider'
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void
@@ -17,17 +18,17 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const activeQuery = searchParams.get('q') || ''
+  const { searchQuery, setSearchQuery } = useSearchQueryContext()
 
   const { user, isLoading: loading } = useUser()
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const formData = new FormData(e.currentTarget as HTMLFormElement)
+    const formData = new FormData(e.currentTarget)
     const query = String(formData.get('q') || '').trim()
 
     if (query) {
+      setSearchQuery(query)
       router.push(`/search?q=${encodeURIComponent(query)}`)
       setMobileSearchOpen(false)
     }
@@ -51,11 +52,11 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           <form onSubmit={handleSearch} className="flex-1 md:hidden">
             <div className="relative w-full">
               <Input
-                key={`mobile-${pathname}-${activeQuery}`}
+                key={`mobile-${pathname}-${searchQuery}`}
                 name="q"
                 type="text"
                 placeholder="Search resources..."
-                defaultValue={pathname === '/search' ? activeQuery : ''}
+                defaultValue={pathname === '/search' ? searchQuery : ''}
                 className="pl-10 pr-4"
                 autoFocus
               />
@@ -67,11 +68,11 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         <form onSubmit={handleSearch} className="hidden md:flex flex-1 mx-6 max-w-md">
           <div className="relative w-full">
             <Input
-              key={`desktop-${pathname}-${activeQuery}`}
+              key={`desktop-${pathname}-${searchQuery}`}
               name="q"
               type="text"
               placeholder="Search resources..."
-              defaultValue={pathname === '/search' ? activeQuery : ''}
+              defaultValue={pathname === '/search' ? searchQuery : ''}
               className="pl-10 pr-4"
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />

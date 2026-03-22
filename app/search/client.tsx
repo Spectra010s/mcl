@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -12,23 +12,18 @@ import { toast } from 'sonner'
 import * as searchApi from '@/lib/api/search'
 import { useUser } from '@/hooks/useUser'
 import { buildLoginRedirect } from '@/lib/auth/loginRedirect'
-
-type InputEvent = React.ChangeEvent<HTMLInputElement>
+import { useSearchQueryContext } from '@/components/providers/searchQueryProvider'
 
 export default function SearchClient() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const query = searchParams.get('q') || ''
-  const [searchQuery, setSearchQuery] = useState(query)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [bookmarkingId, setBookmarkingId] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   const { user } = useUser()
-
-  useEffect(() => {
-    setSearchQuery(query)
-  }, [query])
+  const { setSearchQuery } = useSearchQueryContext()
 
   const { data: results = [], isLoading: isSearching } = useQuery<searchApi.Resource[]>({
     queryKey: ['search', query, user?.id],
@@ -42,10 +37,14 @@ export default function SearchClient() {
     },
   })
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+    const formData = new FormData(e.currentTarget)
+    const nextQuery = String(formData.get('q') || '').trim()
+
+    if (nextQuery) {
+      setSearchQuery(nextQuery)
+      router.push(`/search?q=${encodeURIComponent(nextQuery)}`)
     }
   }
 
@@ -135,16 +134,16 @@ export default function SearchClient() {
 
   return (
     <main className="flex-1 max-w-7xl mx-auto px-4 py-12 md:px-6">
-      {/* Search Box */}
       <div className="mb-12">
         <h1 className="text-4xl font-bold text-foreground mb-6">Search Resources</h1>
         <form onSubmit={handleSearch} className="relative">
           <div className="relative">
             <Input
+              key={query}
+              name="q"
               type="text"
               placeholder="Search by pdf name, filename, or course code..."
-              value={searchQuery}
-              onChange={(e: InputEvent) => setSearchQuery(e.target.value)}
+              defaultValue={query}
               className="pl-12 pr-4 py-3 text-lg"
             />
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -155,7 +154,6 @@ export default function SearchClient() {
         </form>
       </div>
 
-      {/* Results */}
       {isSearching ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">Searching...</p>
