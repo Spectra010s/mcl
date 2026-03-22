@@ -4,6 +4,7 @@ import CBTClient from './client'
 import type { Metadata } from 'next'
 import { generateBreadcrumbSchema, createSchema } from '@/lib/schema'
 import { baseUrl } from '@/constants'
+import { buildLoginRedirect } from '@/lib/auth/loginRedirect'
 
 interface PageProps {
   params: Promise<{
@@ -13,13 +14,15 @@ interface PageProps {
 
 interface RawAcademicLevel {
   level_number: number
-  departments: {
-    short_name: string
-    full_name: string
-  } | {
-    short_name: string
-    full_name: string
-  }[]
+  departments:
+    | {
+        short_name: string
+        full_name: string
+      }
+    | {
+        short_name: string
+        full_name: string
+      }[]
 }
 
 interface RawCourse {
@@ -151,7 +154,7 @@ export default async function CBTPage(props: PageProps) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/login?returnTo=/cbts/${cbtId}`)
+    redirect(buildLoginRedirect(`/cbts/${cbtId}`, 'Please log in to continue to this CBT.'))
   }
 
   const data = await getCBTData(cbtId)

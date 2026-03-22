@@ -6,12 +6,12 @@ import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from '@/components/ui/sonner'
 import { SerwistProvider } from './lib/client'
 import WatchupProviderWrapper from '@/components/WatchUpWrapper'
-import QueryProvider from '@/components/providers/query-provider'
+import QueryProvider from '@/components/providers/queryProvider'
 import { website } from '@/schemas/website'
 import { organization } from '@/schemas/organization'
 import { createSchema } from '@/lib/schema'
 import { mclName } from '@/constants'
-import { UnsavedChangesProvider } from '@/components/providers/unsaved-changes-provider'
+import { UnsavedChangesProvider } from '@/components/providers/unsavedChangesProvider'
 
 const globalSchema = createSchema([website, organization])
 

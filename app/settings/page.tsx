@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import SettingsComponents from '@/components/SettingsComponents'
 import type { Metadata } from 'next'
+import { buildLoginRedirect } from '@/lib/auth/loginRedirect'
 
 export const metadata: Metadata = {
   title: 'Account Settings',
@@ -17,7 +18,12 @@ export default async function SettingsPage() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/login')
+    redirect(
+      buildLoginRedirect(
+        '/settings',
+        'Please log in to manage your account settings and preferences.',
+      ),
+    )
   }
 
   const { data: profile, error } = await supabase
