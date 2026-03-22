@@ -16,22 +16,11 @@ describe('updateSession', () => {
   let mockRequest: NextRequest
 
   beforeEach(() => {
-    mockRequest = new NextRequest(new URL('https://tayo.com/upload'))
+    mockRequest = new NextRequest(new URL('https://tayo.com/browse'))
   })
 
-  it('returns NextResponse if user is authenticated', async () => {
-    const { createServerClient } = await import('@supabase/ssr')
-    ;(createServerClient as Mock).mockReturnValueOnce({
-      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: '123' } } }) },
-      from: vi.fn(),
-    })
-
-    const res = await updateSession(mockRequest as NextRequest)
-    expect(res).toBeDefined()
-    expect(res.cookies).toBeDefined()
-  })
-
-  it('redirects to /login with returnTo if unauthenticated and on /upload', async () => {
+  it('redirects to /login if unauthenticated and on a protected route like /cbts', async () => {
+    mockRequest = new NextRequest(new URL('https://tayo.com/cbts'))
     const { createServerClient } = await import('@supabase/ssr')
     ;(createServerClient as Mock).mockReturnValueOnce({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
@@ -39,12 +28,11 @@ describe('updateSession', () => {
 
     const res = await updateSession(mockRequest as NextRequest)
     expect(res.status).toBe(307)
-    expect(res.headers.get('location')).toBe('https://tayo.com/login?returnTo=%2Fupload')
+    expect(res.headers.get('location')).toBe('https://tayo.com/login?returnTo=%2Fcbts')
   })
 
-  it('does not redirect if unauthenticated but not on /upload', async () => {
-    mockRequest = new NextRequest(new URL('https://tayo.com/some-other-page'))
-
+  it('allows public access to /upload when unauthenticated', async () => {
+    mockRequest = new NextRequest(new URL('https://tayo.com/upload'))
     const { createServerClient } = await import('@supabase/ssr')
     ;(createServerClient as Mock).mockReturnValueOnce({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
