@@ -15,6 +15,7 @@ const breadcrumbNode = generateBreadcrumbSchema([
     url: `${baseUrl}/upload`,
   },
 ])
+
 const jsonLd = createSchema([breadcrumbNode])
 
 export default function UploadPage() {

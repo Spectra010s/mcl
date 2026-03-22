@@ -1,7 +1,8 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { useState, useCallback } from 'react'
+import FormRestorer, { RestoreData } from './FormRestorer'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -25,56 +26,22 @@ type InputEvent = React.ChangeEvent<HTMLInputElement>
 
 export default function UploadClient() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
-    title: searchParams.get('title') || '',
-    description: searchParams.get('description') || '',
-    facultyId: searchParams.get('facultyId') || '',
-    departmentId: searchParams.get('departmentId') || '',
-    levelId: searchParams.get('levelId') || '',
-    courseId: searchParams.get('courseId') || '',
+    title: '',
+    description: '',
+    facultyId: '',
+    departmentId: '',
+    levelId: '',
+    courseId: '',
   })
   const [file, setFile] = useState<File | null>(null)
   const [dragging, setDragging] = useState(false)
-  const hasRestoredToast = useRef(false)
 
   const { user } = useUser()
 
-  useEffect(() => {
-    const hasData =
-      searchParams.get('title') ||
-      searchParams.get('fileName') ||
-      searchParams.get('facultyId') ||
-      searchParams.get('description')
-
-    // If we have data in the URL and haven't shown the toast yet
-    if (hasData && !hasRestoredToast.current) {
-      hasRestoredToast.current = true
-      const fileName = searchParams.get('fileName')
-
-      const restorationMessage = fileName
-        ? `We've restored your form. Please re-select "${fileName}" to finish your upload.`
-        : "We've restored your form progress. You can now complete your upload."
-
-      toast.info('Welcome back!', {
-        description: restorationMessage,
-        duration: 8000,
-      })
-
-      // Clean up URL parameters to prevent re-triggering if component remounts
-      const newParams = new URLSearchParams(searchParams.toString())
-      newParams.delete('title')
-      newParams.delete('description')
-      newParams.delete('facultyId')
-      newParams.delete('departmentId')
-      newParams.delete('levelId')
-      newParams.delete('courseId')
-      newParams.delete('fileName')
-      const newQuery = newParams.toString()
-      const newUrl = `${window.location.pathname}${newQuery ? `?${newQuery}` : ''}`
-      window.history.replaceState(null, '', newUrl)
-    }
-  }, [searchParams])
+  const handleRestore = useCallback((data: RestoreData) => {
+    setFormData(prev => ({ ...prev, ...data }))
+  }, [])
 
   const { data: faculties = [], isLoading: isLoadingFaculties } = useQuery<uploadApi.Faculty[]>({
     queryKey: ['faculties'],
@@ -278,6 +245,7 @@ export default function UploadClient() {
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
+      <FormRestorer onRestore={handleRestore} />
       <h1 className="text-3xl font-bold text-primary mb-2">Upload Resource</h1>
       <p className="text-muted-foreground mb-6">Share academic materials with the community</p>
 
