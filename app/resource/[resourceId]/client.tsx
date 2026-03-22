@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { useRouter, useSearchParams } from 'next/navigation'
 import LinkifiedText from '@/components/LinkifiedText'
 import * as resourcesApi from '@/lib/api/resources'
+import { buildLoginRedirect } from '@/lib/auth/loginRedirect'
 import type { User } from '@supabase/supabase-js'
 
 interface Resource {
@@ -69,8 +70,12 @@ export default function ResourceClient({ resource, user, initialBookmark }: Reso
 
   const handleDownload = useCallback(() => {
     if (!user) {
-      const returnUrl = encodeURIComponent(`/resource/${resourceId}?action=download`)
-      router.push(`/login?returnTo=${returnUrl}`)
+      router.push(
+        buildLoginRedirect(
+          `/resource/${resourceId}?action=download`,
+          'Please log in to download this resource.',
+        ),
+      )
       return
     }
 
@@ -89,8 +94,12 @@ export default function ResourceClient({ resource, user, initialBookmark }: Reso
 
   const handleBookmark = useCallback(async () => {
     if (!user) {
-      const returnUrl = encodeURIComponent(`/resource/${resourceId}?action=bookmark`)
-      router.push(`/login?returnTo=${returnUrl}`)
+      router.push(
+        buildLoginRedirect(
+          `/resource/${resourceId}?action=bookmark`,
+          'Please log in to save this resource to your bookmarks.',
+        ),
+      )
       return
     }
 
@@ -108,8 +117,12 @@ export default function ResourceClient({ resource, user, initialBookmark }: Reso
 
   const handlePreview = useCallback(async () => {
     if (!user) {
-      const returnUrl = encodeURIComponent(`/resource/${resourceId}?action=preview`)
-      router.push(`/login?returnTo=${returnUrl}`)
+      router.push(
+        buildLoginRedirect(
+          `/resource/${resourceId}?action=preview`,
+          'Please log in to preview this resource.',
+        ),
+      )
       return
     }
 
