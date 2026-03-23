@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/passwordInput'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
@@ -15,13 +15,15 @@ import { useQueryToast } from '@/hooks/useQueryToast'
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>
 
-export default function LoginContent() {
+interface LoginContentProps {
+  returnTo: string
+}
+
+export default function LoginContent({ returnTo }: LoginContentProps) {
   const [emailOrUsername, setEmailOrUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const returnTo = searchParams.get('returnTo') || '/browse/faculties'
   const supabase = createClient()
   useQueryToast()
 

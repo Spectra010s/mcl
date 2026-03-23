@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Download, BookmarkPlus, ChevronLeft, Eye } from 'lucide-react'
 import { ResourcePreview } from '@/components/ResourcePreview'
 import { toast } from 'sonner'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import LinkifiedText from '@/components/LinkifiedText'
 import * as resourcesApi from '@/lib/api/resources'
 import { buildLoginRedirect } from '@/lib/auth/loginRedirect'
@@ -51,11 +51,16 @@ interface ResourceClientProps {
   resource: Resource
   user: User | null
   initialBookmark: boolean
+  action: string
 }
 
-export default function ResourceClient({ resource, user, initialBookmark }: ResourceClientProps) {
+export default function ResourceClient({
+  resource,
+  user,
+  initialBookmark,
+  action,
+}: ResourceClientProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   const [isBookmarked, setIsBookmarked] = useState(initialBookmark)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -146,25 +151,19 @@ export default function ResourceClient({ resource, user, initialBookmark }: Reso
 
   // Handle auto-trigger after login
   useEffect(() => {
-    const action = searchParams.get('action')
     if (action && user && resource && !hasAutoTriggered) {
       setHasAutoTriggered(true)
 
-      // Clean up URL
-      const newParams = new URLSearchParams(searchParams.toString())
-      newParams.delete('action')
-      const newQuery = newParams.toString()
-      router.replace(`/resource/${resourceId}${newQuery ? `?${newQuery}` : ''}`, {
+      router.replace(`/resource/${resourceId}`, {
         scroll: false,
       })
 
-      // Execute action
       if (action === 'download') handleDownload()
       else if (action === 'preview') handlePreview()
       else if (action === 'bookmark') handleBookmark()
     }
   }, [
-    searchParams,
+    action,
     user,
     resource,
     hasAutoTriggered,

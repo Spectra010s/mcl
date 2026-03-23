@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach, Mock } from 'vitest'
 import UploadClient from '@/app/upload/client'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useUser } from '@/hooks/useUser'
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { useQuery, useMutation } from '@tanstack/react-query'
@@ -10,7 +10,6 @@ import { toast } from 'sonner'
 // Mock dependencies
 vi.mock('next/navigation', () => ({
   useRouter: vi.fn(),
-  useSearchParams: vi.fn(),
 }))
 
 vi.mock('@/hooks/useUnsavedChanges', () => ({
@@ -51,12 +50,10 @@ vi.mock('sonner', () => ({
 
 describe('UploadClient', () => {
   const mockPush = vi.fn()
-  const mockSearchParams = new URLSearchParams()
 
   beforeEach(() => {
     vi.clearAllMocks()
     ;(useRouter as Mock).mockReturnValue({ push: mockPush })
-    ;(useSearchParams as Mock).mockReturnValue(mockSearchParams)
     ;(useUser as Mock).mockReturnValue({ user: { id: 'user-123' } })
     ;(useUnsavedChanges as Mock).mockImplementation(() => undefined)
     ;(useQuery as Mock).mockReturnValue({ data: [], isLoading: false })
@@ -86,13 +83,18 @@ describe('UploadClient', () => {
   })
 
   it('restores form data from URL parameters on mount', () => {
-    const params = new URLSearchParams({
-      title: 'Restored Title',
-      description: 'Restored Description',
-    })
-    ;(useSearchParams as Mock).mockReturnValue(params)
-
-    render(<UploadClient />)
+    render(
+      <UploadClient
+        initialRestoreData={{
+          title: 'Restored Title',
+          description: 'Restored Description',
+          facultyId: '',
+          departmentId: '',
+          levelId: '',
+          courseId: '',
+        }}
+      />,
+    )
 
     expect(screen.getByDisplayValue('Restored Title')).toBeDefined()
     expect(screen.getByDisplayValue('Restored Description')).toBeDefined()

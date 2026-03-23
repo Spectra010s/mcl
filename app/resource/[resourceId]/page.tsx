@@ -8,6 +8,9 @@ interface PageProps {
   params: Promise<{
     resourceId: string
   }>
+  searchParams?: Promise<{
+    action?: string | string[]
+  }>
 }
 async function getResourceData(resourceId: string) {
   const supabase = await createClient()
@@ -75,13 +78,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function ResourcePage({ params }: PageProps) {
+export default async function ResourcePage({ params, searchParams }: PageProps) {
   const { resourceId } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const actionParam = resolvedSearchParams?.action
+  const action = Array.isArray(actionParam) ? actionParam[0] : actionParam
   const { resource, user } = await getResourceData(resourceId)
   if (!resource) {
     return (
       <main className="flex-1 flex items-center justify-center py-20">
-        <p>Custom Resource not found Code Resource not found</p>
+        <p>Resource not found.</p>
       </main>
     )
   }
@@ -108,7 +114,12 @@ export default async function ResourcePage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ResourceClient resource={resource} user={user} initialBookmark={isResourceBookmarked} />
+      <ResourceClient
+        resource={resource}
+        user={user}
+        initialBookmark={isResourceBookmarked}
+        action={action || ''}
+      />
     </>
   )
 }
