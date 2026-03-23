@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { Suspense } from 'react'
 import LoginContent from './client'
 import { generateBreadcrumbSchema, createSchema } from '@/lib/schema'
 import { baseUrl } from '@/constants'
@@ -17,7 +16,17 @@ export const metadata: Metadata = {
   description: 'Access your account to download past questions and manage your uploads.',
 }
 
-export default function LoginPage() {
+type PageProps = {
+  searchParams?: Promise<{
+    returnTo?: string | string[]
+  }>
+}
+
+export default async function LoginPage({ searchParams }: PageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const returnToParam = resolvedSearchParams?.returnTo
+  const returnTo = Array.isArray(returnToParam) ? returnToParam[0] : returnToParam
+
   return (
     <>
       <script
@@ -26,10 +35,7 @@ export default function LoginPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-
-      <Suspense fallback={<div>Loading...</div>}>
-        <LoginContent />
-      </Suspense>
+      <LoginContent returnTo={returnTo || '/browse/faculties'} />
     </>
   )
 }
